@@ -227,7 +227,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               
               <Link href="/delivery-areas" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Delivery Areas</Link>
               <Link href="/corporate-events" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Corporate/Events</Link>
-              <Link href="/about" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">About Us</Link>
+              <Link href="/about-us" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">About Us</Link>
               <Link href="/faqs" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">FAQ's</Link>
             </nav>
 
