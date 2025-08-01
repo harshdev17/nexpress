@@ -61,29 +61,29 @@ export default function Features() {
   ];
 
   return (
-    <div className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="py-12 md:py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Dotted line at top */}
-        <div className="border-t-2 border-dotted border-gray-300 mb-16"></div>
+        <div className="border-t-2 border-dotted border-gray-300 mb-12 md:mb-16"></div>
         
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 lg:gap-8">
           {features.map((feature, index) => (
             <div key={index} className="group">
               {/* Feature Block */}
-              <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 group-hover:-translate-y-1">
+              <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 group-hover:-translate-y-1">
                 {/* Icon */}
-                <div className="w-14 h-14 bg-[#368899] rounded-full flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-[#368899] rounded-full flex items-center justify-center text-white mb-3 md:mb-4 group-hover:scale-110 transition-transform duration-300">
                   {feature.icon}
                 </div>
                 
                 {/* Title */}
-                <h3 className="text-lg font-semibold text-[#368899] mb-3 group-hover:text-[#2d7a8a] transition-colors duration-300">
+                <h3 className="text-base md:text-lg font-semibold text-[#368899] mb-2 md:mb-3 group-hover:text-[#2d7a8a] transition-colors duration-300">
                   {feature.title}
                 </h3>
                 
                 {/* Description */}
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
               </div>

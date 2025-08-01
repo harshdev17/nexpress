@@ -10,7 +10,7 @@ export default function ProductCard({
   discountPercentage = null
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-5 max-w-xs mx-auto group relative">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-3 md:p-5 w-full mx-auto group relative">
       {/* Discount Badge - Only show if discountPercentage is provided */}
       {discountPercentage && discountPercentage.trim() !== "" && (
         <div className="absolute top-0 right-0 z-10">
@@ -21,8 +21,8 @@ export default function ProductCard({
       )}
 
       {/* Product Image */}
-      <div className="w-full flex justify-center mb-4">
-        <div className="relative h-36 w-28 flex items-center justify-center">
+      <div className="w-full flex justify-center mb-3 md:mb-4">
+        <div className="relative h-28 w-20 md:h-36 md:w-28 flex items-center justify-center">
           <Image
             src={imageSrc}
             alt={title}
@@ -35,19 +35,19 @@ export default function ProductCard({
       </div>
 
       {/* Title */}
-      <h3 className="text-base font-semibold text-[#368899] mb-2 hover:underline cursor-pointer transition-colors duration-200 text-center">
+      <h3 className="text-sm md:text-base font-semibold text-[#368899] mb-2 hover:underline cursor-pointer transition-colors duration-200 text-center line-clamp-2">
         {title}
       </h3>
 
       {/* Description */}
-      <p className="text-sm text-gray-600 mb-4 border-b border-gray-100 pb-3 min-h-[36px] text-center">
+      <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 border-b border-gray-100 pb-2 md:pb-3 min-h-[28px] md:min-h-[36px] text-center">
         {description}
       </p>
 
       {/* Price and Button */}
-      <div className="flex items-center justify-between mt-auto pt-2">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-gray-800">{discountedPrice}</span>
+      <div className="flex flex-col sm:flex-row items-center justify-between mt-auto pt-2 gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
+          <span className="text-base md:text-lg font-bold text-gray-800">{discountedPrice}</span>
           {originalPrice && (
             <span className="text-sm text-gray-400 line-through">{originalPrice}</span>
           )}

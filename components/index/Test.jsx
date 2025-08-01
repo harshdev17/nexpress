@@ -77,8 +77,8 @@ export default function HeroSection() {
 
           .swiper-button-prev,
           .swiper-button-next {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             background-color: rgba(255, 255, 255, 0.4);
             border: 2px solid rgba(255, 255, 255, 0.6);
             border-radius: 50%;
@@ -118,18 +118,19 @@ export default function HeroSection() {
 
           .swiper-pagination {
             position: absolute;
-            bottom: 10px;
+            bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
           }
 
           .swiper-pagination-bullet {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             transition: background-color 0.3s ease, transform 0.3s ease;
+            margin: 0 4px;
           }
 
           .swiper-pagination-bullet-active {

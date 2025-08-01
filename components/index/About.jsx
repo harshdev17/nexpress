@@ -2,18 +2,18 @@
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-12 md:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center mb-12 md:mb-16">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white px-3 md:px-4 py-2 rounded-full text-xs md:text-sm font-medium mb-4 md:mb-6">
+            <svg className="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             About Our Service
           </div>
           
-          <h1 className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-gray-900 via-[#368899] to-[#2d7a8a] bg-clip-text text-transparent mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold bg-gradient-to-r from-gray-900 via-[#368899] to-[#2d7a8a] bg-clip-text text-transparent mb-4 md:mb-6 px-4">
             Welcome To London's Longest Trading Home Delivery Service
           </h1>
           
@@ -24,9 +24,9 @@ export default function About() {
 
         {/* Content */}
         <div className="max-w-7xl mx-auto">
-          <div className="space-y-6 text-gray-800 leading-relaxed">
+          <div className="space-y-4 md:space-y-6 text-gray-800 leading-relaxed px-4">
             {/* Paragraph 1 */}
-            <p className="text-base">
+            <p className="text-sm md:text-base">
               We have been delivering to homes and offices in London since 1985 and were the original home delivery service. We deliver to most London areas using our own vehicles and driver teams. We do not outsource our deliveries to third parties. Our offices are staffed every day Monday to Thursday between 9am and 7pm and on Fridays between 9am and 3pm - if your call is not answered promptly, please leave a message and we will return it as soon as we can.
             </p>
             
