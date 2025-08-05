@@ -27,8 +27,10 @@ import BrandLogo from "@/components/common/BrandLogo";
 export default function Home() {
   return (
     <>
-      <HeroSection />
-      <CategorySection />
+      <div className="hidden md:block">
+        <HeroSection />
+        <CategorySection />
+      </div>
       <Products />
       <Features />
       <About />

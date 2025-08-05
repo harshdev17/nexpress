@@ -41,7 +41,7 @@ export default function CategorySection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-4">
+          <div className="inline-flex items-center gap-2  text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-4">
             <svg className="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
@@ -89,7 +89,7 @@ export default function CategorySection() {
                 key={`${category.name}-${index}`}
                 className="group flex-shrink-0"
               >
-                <div className="bg-white rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:scale-105 hover:-translate-y-2 w-48 md:w-64 h-32 md:h-48">
+                <div className="bg-white rounded-xl md:rounded-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:scale-105 hover:-translate-y-2 w-48 md:w-64 h-32 md:h-48">
                   {/* Category Header */}
                   <div className="bg-gradient-to-r from-[#368899] to-[#2d7a8a] h-full p-3 md:p-6 text-white text-center flex flex-col items-center justify-center">
                     <div className="w-10 h-10 md:w-16 md:h-16 bg-white/20 rounded-full flex items-center justify-center mb-2 md:mb-4">
@@ -107,8 +107,6 @@ export default function CategorySection() {
           </div>
 
           {/* Gradient Overlays */}
-          <div className="absolute left-0 top-0 w-12 md:w-20 h-full bg-gradient-to-r from-gray-50 to-transparent pointer-events-none"></div>
-          <div className="absolute right-0 top-0 w-12 md:w-20 h-full bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
         </div>
 
         {/* Instructions */}

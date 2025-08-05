@@ -117,7 +117,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
 
       {/* Second Row - Logo, Contact Info, Delivery Info, Cart */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-5">
+        <div className="max-w-7xl mx-auto px-6 py-1">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
             {/* Logo */}
             <div className="flex justify-center lg:justify-start">
@@ -231,22 +231,25 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               <Link href="/faqs" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">FAQ's</Link>
             </nav>
 
-            {/* Search Bar */}
-            <div className="flex items-center w-full lg:w-auto">
-              <div className="relative w-full lg:w-96 group">
+            {/* Centered Search Bar */}
+            <div className="flex items-center justify-center w-full lg:w-auto">
+              <div className="relative w-full max-w-md group">
                 <input 
                   type="search" 
                   placeholder="Search products..." 
-                  className="w-full border-2 border-gray-200 rounded-xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-all duration-300 group-hover:border-gray-300"
+                  className="w-full border-2 border-gray-200 rounded-xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-all duration-300 group-hover:border-gray-300 group-hover:shadow-md"
                   aria-label="Search products"
+                  id="search-input"
                 />
                 <button 
                   type="submit" 
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#368899] text-white p-2 rounded-lg hover:bg-[#2d7a8a] focus:outline-none focus:ring-2 focus:ring-[#368899] focus:ring-offset-2 transition-all duration-300 hover:scale-110"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#368899] text-white p-2 rounded-lg hover:bg-[#2d7a8a] focus:outline-none focus:ring-2 focus:ring-[#368899] focus:ring-offset-2 transition-all duration-300 hover:scale-110 group-hover:shadow-lg"
                   aria-label="Search"
                 >
                   <SearchIcon className="w-4 h-4" />
                 </button>
+                {/* Search animation indicator */}
+                <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-[#368899]/20 transition-all duration-300 pointer-events-none"></div>
               </div>
             </div>
           </div>
