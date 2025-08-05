@@ -62,6 +62,8 @@ export default function Footer() {
       <footer
         className="w-full font-sans bg-gradient-to-b from-[#1e5b67] to-[#0f3a43] text-white py-12 overflow-hidden"
         role="contentinfo"
+        style={{paddingBottom: "70px",
+          marginBottom: "25px"}}
       >
         <div className="max-w-7xl mx-auto px-6">
           {/* Compact Hero Section */}
@@ -378,12 +380,12 @@ export default function Footer() {
         <div class="qaf__bottom_bar_container">
           <div class="qaf__left_blank_div"></div>
           <div class="qaf__left_blank_div_wrap"></div>
-<div>
+
           <img
             class="qaf__bottomNavBar_img"
             src="https://static.99acres.com/universalhp/img/m_hp_bottomNavBar_svg.svg"
           />
-          </div>
+       
           <div class="qaf__right_blank_div"></div>
           <div class="qaf__right_blank_div_wrap"></div>
         </div>
