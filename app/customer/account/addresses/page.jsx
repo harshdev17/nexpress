@@ -1,0 +1,216 @@
+import Link from "next/link";
+import AccountTabs from "@/components/common/AccountTabs";
+
+export const metadata = {
+  title: "Address Book | Nexpress Delivery",
+  description: "Manage your delivery addresses and preferences.",
+};
+
+export default function AddressesPage() {
+  const addresses = [
+    {
+      id: 1,
+      type: "Home",
+      isDefault: true,
+      name: "John Smith",
+      company: "Personal",
+      address1: "123 Main Street",
+      address2: "Apartment 4B",
+      city: "London",
+      postcode: "SW1A 1AA",
+      country: "United Kingdom",
+      state: "England",
+      phone: "+44 20 7946 0958"
+    },
+    {
+      id: 2,
+      type: "Office",
+      isDefault: false,
+      name: "John Smith",
+      company: "Tech Solutions Ltd",
+      address1: "456 Business Park",
+      address2: "Floor 3, Suite 301",
+      city: "Manchester",
+      postcode: "M1 1AA",
+      country: "United Kingdom",
+      state: "England",
+      phone: "+44 161 496 0000"
+    },
+    {
+      id: 3,
+      type: "Summer House",
+      isDefault: false,
+      name: "John Smith",
+      company: "Personal",
+      address1: "789 Coastal Road",
+      address2: "",
+      city: "Brighton",
+      postcode: "BN1 1AA",
+      country: "United Kingdom",
+      state: "England",
+      phone: "+44 1273 000000"
+    }
+  ];
+
+  return (
+    <main className="w-full bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900">
+                  Address Book
+                </h1>
+                <p className="text-lg text-gray-600 mt-1">Manage your delivery addresses and preferences</p>
+              </div>
+            </div>
+            <Link
+              href="/customer/account"
+              className="inline-flex items-center px-6 py-3 text-sm font-medium text-[#368899] bg-white border-2 border-[#368899] rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+
+        {/* Account Tabs */}
+        <div className="mb-8">
+          <AccountTabs />
+        </div>
+
+        {/* Addresses Content */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Addresses</h2>
+              <p className="text-gray-600">You have {addresses.length} saved addresses</p>
+            </div>
+            <button className="inline-flex items-center px-6 py-3 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add New Address
+            </button>
+          </div>
+
+          {addresses.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">No addresses yet</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Add your frequently used delivery addresses for a faster checkout experience.
+              </p>
+              <button className="inline-flex items-center px-8 py-4 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Your First Address
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {addresses.map((address) => (
+                <div key={address.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative">
+                  {address.isDefault && (
+                    <span className="absolute top-4 right-4 bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1 rounded-full border border-blue-200">
+                      Default
+                    </span>
+                  )}
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">{address.type} Address</h3>
+                      <p className="text-sm text-gray-600">{address.name} {address.company !== "Personal" && `(${address.company})`}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-gray-700 text-sm space-y-1 mb-6">
+                    <p>{address.address1}</p>
+                    {address.address2 && <p>{address.address2}</p>}
+                    <p>{address.city}, {address.postcode}</p>
+                    <p>{address.state}, {address.country}</p>
+                    <p>Phone: {address.phone}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button className="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                    {!address.isDefault && (
+                      <button className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Set as Default
+                      </button>
+                    )}
+                    <button className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                      </svg>
+                      Use for Next Order
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Quick Actions */}
+          {addresses.length > 0 && (
+            <div className="mt-12 p-6 bg-gray-100 rounded-2xl border border-gray-200">
+              <div className="flex flex-col md:flex-row items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Quick Actions</h3>
+                  <p className="text-gray-600">Manage your addresses and delivery preferences</p>
+                </div>
+                <div className="flex items-center space-x-3 mt-4 md:mt-0">
+                  <button className="inline-flex items-center px-4 py-2 bg-white text-[#368899] text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-[#368899]">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export Addresses
+                  </button>
+                  <button className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Add New Default
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}

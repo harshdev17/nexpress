@@ -47,14 +47,14 @@ export default function Footer() {
     { name: "My Account", href: "/account" },
     { name: "About", href: "/about" },
     { name: "Contact Us", href: "/contact" },
-    { name: "Delivery", href: "/delivery" },
+    { name: "Delivery Areas", href: "/delivery-areas" },
   ];
 
   const footerLinksRight = [
     { name: "Sitemap", href: "/sitemap" },
-    { name: "FAQ", href: "/faqs" },
+    { name: "FAQ", href: "/faq" },
     { name: "Cookie Policy", href: "/cookie-policy" },
-    { name: "Terms & Conditions", href: "/terms" },
+    { name: "Terms & Conditions", href: "/terms-and-conditions" },
   ];
 
   return (

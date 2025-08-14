@@ -228,7 +228,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               <Link href="/delivery-areas" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Delivery Areas</Link>
               <Link href="/corporate-events" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Corporate/Events</Link>
               <Link href="/about-us" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">About Us</Link>
-              <Link href="/faqs" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">FAQ's</Link>
+              <Link href="/faq" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">FAQ's</Link>
             </nav>
 
             {/* Centered Search Bar */}
@@ -383,7 +383,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/faqs" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/faq" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <FAQIcon className="w-5 h-5" />
                       <span className="font-medium">FAQ's</span>
                     </Link>
