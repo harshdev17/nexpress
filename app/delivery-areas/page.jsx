@@ -110,28 +110,29 @@ export default function DeliveryAreasPage() {
         </header>
 
         <div className="space-y-12">
+         
           {/* Postcode Search */}
-          <div className="bg-gradient-to-br from-[#368899]/5 to-[#2d7a8a]/5 rounded-2xl border border-[#368899]/20 p-6 md:p-8">
-            <div className="max-w-2xl mx-auto text-center">
-              <div className="flex items-center justify-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#368899] to-[#2d7a8a] rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Check Your Postcode</h2>
-                  <p className="text-gray-600 text-sm">Enter your postcode to see if we deliver to your area</p>
-                </div>
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 shadow-lg p-6 md:p-8">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#368899] to-[#2d7a8a] rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Check Your Postcode</h2>
+                <p className="text-gray-600 text-sm">Enter your postcode to see if we deliver to your area</p>
+              </div>
+            </div>
+            
+            <div className="max-w-2xl">
+              <div className="flex space-x-3">
                 <input
                   type="text"
-                  placeholder="Enter your postcode (e.g., N1, E1, SE1)"
                   value={searchPostcode}
                   onChange={(e) => setSearchPostcode(e.target.value)}
                   onKeyPress={handleKeyPress}
+                  placeholder="Enter your postcode (e.g., N1, E1)"
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#368899] focus:border-transparent outline-none transition-all duration-200"
                 />
                 <button
@@ -141,216 +142,94 @@ export default function DeliveryAreasPage() {
                   Search
                 </button>
               </div>
-
-              {/* Search Result */}
-              {searchResult && (
-                <div className="mt-8 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-3xl border-2 border-green-200 shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-500">
-                  {/* Header with enhanced styling */}
-                  <div className="bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600 p-8 text-white relative overflow-hidden">
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 to-teal-600/20"></div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-                    
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-white/25 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg border border-white/20">
-                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              
+              {/* Search Results */}
+              {searchResult !== null && (
+                <div className="mt-6 transition-all duration-300">
+                  {searchResult ? (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
-                        <div>
-                          <h3 className="text-2xl font-bold mb-1">Great News! 🎉</h3>
-                          <p className="text-green-100 text-lg">We deliver to <span className="font-bold text-white">{searchPostcode.toUpperCase()}</span></p>
-                        </div>
+                        <h3 className="text-lg font-bold text-green-800">
+                          Great news! We deliver to {searchResult.area}
+                        </h3>
                       </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold mb-1">{searchResult.area}</div>
-                        <div className="text-green-100 text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">Service Available</div>
+                      <div className="space-y-2 mb-4">
+                        <p className="text-green-700">
+                          <span className="font-semibold">Delivery Days:</span> {deliverySchedules[searchResult.area]?.description}
+                        </p>
+                        <p className="text-green-700">
+                          <span className="font-semibold">Delivery Hours:</span> {deliverySchedules[searchResult.area]?.time}
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                  
-                  {/* Content with enhanced spacing */}
-                  <div className="p-8">
-                    <div className="grid md:grid-cols-2 gap-8">
-                      {/* Area Info */}
-                      <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-5 border border-green-100 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center shadow-sm">
-                              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-800 text-lg mb-1">Coverage Area</h4>
-                              <p className="text-gray-600 leading-relaxed">{searchResult.description}</p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-white rounded-2xl p-5 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center shadow-sm">
-                              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-800 text-lg mb-1">Delivery Days</h4>
-                              <p className="text-[#368899] font-semibold text-lg">{deliverySchedules[searchResult.area]?.description}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Delivery Details */}
-                      <div className="space-y-6">
-                        <div className="bg-white rounded-2xl p-5 border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center shadow-sm">
-                              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-800 text-lg mb-1">Delivery Hours</h4>
-                              <p className="text-[#368899] font-semibold text-lg">{deliverySchedules[searchResult.area]?.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-white rounded-2xl p-5 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-red-100 rounded-xl flex items-center justify-center shadow-sm">
-                              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-gray-800 text-lg mb-1">Delivery Charge</h4>
-                              <p className="text-[#368899] font-semibold text-lg">£3.99 <span className="text-sm text-gray-500">(including VAT)</span></p>
-                            </div>
-                          </div>
-                        </div>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                          href="/products"
+                          className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-200"
+                        >
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                          </svg>
+                          Start Shopping Now
+                        </Link>
+                        <Link
+                          href="/contact"
+                          className="inline-flex items-center justify-center px-6 py-3 bg-white text-green-700 border border-green-300 font-semibold rounded-lg hover:bg-green-50 transition-all duration-200"
+                        >
+                          Learn More
+                        </Link>
                       </div>
                     </div>
-                    
-                    {/* Enhanced Action Button */}
-                    <div className="mt-8 pt-6 border-t border-green-200 text-center">
-                      <Link
-                        href="/products"
-                        className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600 text-white font-bold text-lg rounded-2xl hover:from-green-600 hover:via-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-xl transform hover:scale-105 hover:shadow-2xl"
-                      >
-                        <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        Start Shopping Now
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {searchResult === false && (
-                <div className="mt-8 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-3xl border-2 border-orange-200 shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-500">
-                  {/* Header with enhanced styling */}
-                  <div className="bg-gradient-to-r from-orange-500 via-amber-600 to-yellow-600 p-8 text-white relative overflow-hidden">
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-600/20 to-yellow-600/20"></div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-                    
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-white/25 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-lg border border-white/20">
-                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  ) : (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
                           </svg>
                         </div>
-                        <div>
-                          <h3 className="text-2xl font-bold mb-1">Not Currently Available</h3>
-                          <p className="text-orange-100 text-lg">We don't deliver to <span className="font-bold text-white">{searchPostcode.toUpperCase()}</span> yet</p>
-                        </div>
+                        <h3 className="text-lg font-bold text-red-800">
+                          Sorry, we don't currently deliver to this postcode
+                        </h3>
                       </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold mb-1">Out of Area</div>
-                        <div className="text-orange-100 text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">Expansion Planned</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Content with enhanced spacing */}
-                  <div className="p-8">
-                    <div className="text-center mb-8">
-                      <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-800 mb-3">We're Expanding Our Network!</h4>
-                      <p className="text-gray-700 text-lg leading-relaxed max-w-2xl mx-auto">
-                        Don't worry! We're constantly expanding our delivery network. Please contact us to check if we can arrange delivery to your area or if we have plans to expand our coverage soon.
+                      <p className="text-red-700 mb-4">
+                        Don't worry! We're constantly expanding our delivery areas. Please contact us to check if we can arrange delivery to your area.
                       </p>
-                    </div>
-                    
-                    {/* Enhanced Contact Options */}
-                    <div className="grid md:grid-cols-2 gap-6 mb-8">
-                      <div className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm hover:shadow-md transition-all duration-300 hover:border-orange-200">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-red-100 rounded-xl flex items-center justify-center shadow-sm">
-                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-800 text-lg mb-1">Call Us Directly</h4>
-                            <p className="text-orange-600 font-semibold text-lg">020 8445 0589</p>
-                            <p className="text-gray-500 text-sm">Speak to our team</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm hover:shadow-md transition-all duration-300 hover:border-orange-200">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-xl flex items-center justify-center shadow-sm">
-                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-800 text-lg mb-1">Send Us an Email</h4>
-                            <p className="text-orange-600 font-semibold text-lg">info@nexpressdelivery.co.uk</p>
-                            <p className="text-gray-500 text-sm">We'll respond quickly</p>
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <Link
+                          href="tel:+442084450589"
+                          className="inline-flex items-center justify-center px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all duration-200"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          Call Us
+                        </Link>
+                        <Link
+                          href="mailto:info@nexpressdelivery.co.uk"
+                          className="inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          Email Us
+                        </Link>
+                        <Link
+                          href="/contact"
+                          className="inline-flex items-center justify-center px-4 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-all duration-200"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          Chat Us
+                        </Link>
                       </div>
                     </div>
-                    
-                    {/* Enhanced Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Link
-                        href="tel:+442084450589"
-                        className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-500 via-amber-600 to-yellow-600 text-white font-bold text-lg rounded-2xl hover:from-orange-600 hover:via-amber-700 hover:to-yellow-700 transition-all duration-300 shadow-xl transform hover:scale-105 hover:shadow-2xl"
-                      >
-                        <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        Call Now
-                      </Link>
-                      <Link
-                        href="mailto:info@nexpressdelivery.co.uk"
-                        className="inline-flex items-center px-8 py-4 bg-white text-orange-600 border-2 border-orange-500 font-bold text-lg rounded-2xl hover:bg-orange-500 hover:text-white transition-all duration-300 shadow-xl transform hover:scale-105 hover:shadow-2xl"
-                      >
-                        <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Send Email
-                      </Link>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
