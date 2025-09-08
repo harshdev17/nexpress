@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function ProductCard({ 
@@ -21,9 +22,20 @@ export default function ProductCard({
   const discountPercent = hasDiscount ? 
     Math.round(((parseFloat(originalPrice.replace('£', '')) - parseFloat(discountedPrice.replace('£', ''))) / parseFloat(originalPrice.replace('£', ''))) * 100) : null;
 
-  // Check if we have a valid image source
-  const hasValidImage = imageSrc && 
-    imageSrc !== "/products/1.jpg" ;
+  // Build a safe image URL/path to avoid "Invalid URL" errors on Windows paths or malformed strings
+  const defaultImageSrc = "/products/1.jpg";
+  const getSafeImageSrc = (src) => {
+    if (typeof src !== "string") return defaultImageSrc;
+    const trimmed = src.trim();
+    if (!trimmed) return defaultImageSrc;
+    // Normalize backslashes to forward slashes
+    const normalized = trimmed.replace(/\\\\/g, "/").replace(/\\/g, "/");
+    if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("/")) {
+      return normalized;
+    }
+    return `/${normalized}`;
+  };
+  const safeImageSrc = getSafeImageSrc(imageSrc);
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-3 md:p-5 w-full mx-auto group relative h-[400px]">
       {/* Discount Badge - Show if there's a discount or if discountPercentage is provided */}
@@ -47,9 +59,21 @@ export default function ProductCard({
       {/* Product Image */}
       <div className="w-full flex justify-center mb-3 md:mb-4">
         <div className="relative h-28 w-20 md:h-36 md:w-28 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
-          {hasValidImage ? (
+          {id ? (
+            <Link href={`/products/${id}`} className="absolute inset-0 block">
+              <Image
+                src={safeImageSrc}
+                alt={title}
+                fill
+                style={{ objectFit: "contain" }}
+                priority={true}
+                className="transition-transform duration-300 group-hover:scale-105"
+                onError={() => setImageError(true)}
+              />
+            </Link>
+          ) : (
             <Image
-              src={"/products/1.jpg"}
+              src={safeImageSrc}
               alt={title}
               fill
               style={{ objectFit: "contain" }}
@@ -57,12 +81,6 @@ export default function ProductCard({
               className="transition-transform duration-300 group-hover:scale-105"
               onError={() => setImageError(true)}
             />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
           )}
         </div>
       </div>
@@ -82,9 +100,15 @@ export default function ProductCard({
         </div> }
 
       {/* Title */}
-      <h3 className="text-sm md:text-base font-semibold text-[#368899] mb-2 hover:underline cursor-pointer transition-colors duration-200 text-center line-clamp-2 min-h-[40px] flex items-center justify-center">
-        {title}
-      </h3>
+      {id ? (
+        <Link href={`/products/${id}`} className="text-sm md:text-base font-semibold text-[#368899] mb-2 hover:underline cursor-pointer transition-colors duration-200 text-center line-clamp-2 min-h-[40px] flex items-center justify-center">
+          {title}
+        </Link>
+      ) : (
+        <h3 className="text-sm md:text-base font-semibold text-[#368899] mb-2 transition-colors duration-200 text-center line-clamp-2 min-h-[40px] flex items-center justify-center">
+          {title}
+        </h3>
+      )}
 
       {/* Description - Limited to 1 line */}
       <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 border-b border-gray-100 pb-2 md:pb-3 text-center line-clamp-1 min-h-[20px] flex items-center justify-center pb-5">

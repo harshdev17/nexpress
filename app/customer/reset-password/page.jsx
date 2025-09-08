@@ -16,7 +16,7 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const t = params.get('token');
     if (!t) {
-      setError('Invalid reset link');
+      setError('Missing reset token. Paste your token below.');
     } else {
       setToken(t);
     }
@@ -64,6 +64,20 @@ export default function ResetPasswordPage() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {message && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">{message}</div>}
             {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">{error}</div>}
+
+            {!params.get('token') && (
+              <div>
+                <label htmlFor="token" className="block text-sm font-medium text-gray-700 mb-2">Reset Token</label>
+                <input
+                  id="token"
+                  type="text"
+                  value={token}
+                  onChange={e => setToken(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-transparent transition-colors"
+                  placeholder="Paste the token from your email"
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">New Password</label>

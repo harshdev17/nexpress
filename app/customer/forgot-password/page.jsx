@@ -7,6 +7,7 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [debugToken, setDebugToken] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +23,9 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
       if (data.success) {
         setMessage('If the email exists, a reset link has been sent.');
+        if (data.token) {
+          setDebugToken(data.token);
+        }
       } else {
         setError(data.error || 'Unable to process request');
       }
@@ -64,6 +68,16 @@ export default function ForgotPasswordPage() {
               {isLoading ? 'Sending...' : 'Send reset link'}
             </button>
           </form>
+
+          {debugToken && (
+            <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <p className="text-sm text-gray-700 mb-2">For testing, use this direct link:</p>
+              <Link href={`/customer/reset-password?token=${debugToken}`} className="text-[#368899] hover:text-[#2a6b7a] underline break-all">
+                /customer/reset-password?token={debugToken}
+              </Link>
+              <p className="text-xs text-gray-500 mt-2">In production this will be sent via email.</p>
+            </div>
+          )}
 
           <div className="mt-6 text-center">
             <Link href="/customer/login" className="text-[#368899] hover:text-[#2a6b7a]">Back to login</Link>
