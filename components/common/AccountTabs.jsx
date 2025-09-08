@@ -44,6 +44,15 @@ export default function AccountTabs() {
       ),
     },
     {
+      href: "/customer/account/sessions",
+      label: "Sessions",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H3m12 0l-4 4m4-4l-4-4m11 8V8a2 2 0 00-2-2h-3m-4 0H6a2 2 0 00-2 2v8a2 2 0 002 2h11a2 2 0 002-2z" />
+        </svg>
+      ),
+    },
+    {
       href: "/customer/account/edit",
       label: "Edit Account",
       icon: (

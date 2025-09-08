@@ -1,9 +1,82 @@
 "use client"
 import ProductCard from "../common/ProductCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Products() {
   const [activeTab, setActiveTab] = useState("featured");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/products');
+      const data = await response.json();
+      
+      if (data.success) {
+        setProducts(data.products);
+      } else {
+        setError('Failed to fetch products');
+      }
+    } catch (err) {
+      setError('Error loading products');
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter products based on active tab
+  const getFilteredProducts = () => {
+    if (activeTab === "featured") {
+      return products.filter(product => product.Featured === 1);
+    } else if (activeTab === "hotDeals") {
+      // For hot deals, you can implement your own logic
+      // For now, showing products with lower stock or specific criteria
+      return products.filter(product => product.ItemStock < 50 && product.ItemStock > 0);
+    }
+    return products;
+  };
+
+  const filteredProducts = getFilteredProducts();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#368899] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-red-600 mb-4">
+            <svg className="h-16 w-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Products</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchProducts}
+            className="bg-[#368899] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a8a] transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-20">
@@ -65,34 +138,49 @@ export default function Products() {
           </div>
         </div>
 
+        {/* Product Count Display */}
+        <div className="text-center mb-8">
+          <p className="text-gray-600">
+            Showing {filteredProducts.length} products
+            {activeTab === "featured" && " (Featured)"}
+            {activeTab === "hotDeals" && " (Hot Deals)"}
+          </p>
+        </div>
+
         {/* Product Grid with Enhanced Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 px-4">
-          {activeTab === "featured" &&
-            Array.from({ length: 12 }, (_, index) => (
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 px-4">
+            {filteredProducts.map((product, index) => (
               <div
-                key={index}
-                className="transform transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <ProductCard />
-              </div>
-            ))}
-          
-          {activeTab === "hotDeals" &&
-            Array.from({ length: 8 }, (_, index) => (
-              <div
-                key={index}
+                key={product.id}
                 className="transform transition-all duration-500 hover:scale-105 hover:-translate-y-2"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <ProductCard 
-                  title="Limited Time Deal" 
-                  discountedPrice="$19.99"
-                  originalPrice="$39.99"
+                  id={product.id}
+                  title={product.ItemName}
+                  description={product.ItemShortDesc || "Product description"}
+                  originalPrice={`£${parseFloat(product.ItemPrice).toFixed(2)}`}
+                  discountedPrice={`£${parseFloat(product.ItemPrice).toFixed(2)}`}
+                  imageSrc={product.ItemMainImage || "/products/1.jpg"}
+                  brand={product.Brand}
+                  isSoldOut={product.IsSoldOut === 1}
+                  category={product.Category}
                 />
               </div>
             ))}
-        </div>
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="text-gray-400 mb-4">
+              <svg className="h-16 w-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-600">Try switching to a different category or check back later.</p>
+          </div>
+        )}
 
         {/* Enhanced View More Button */}
         <div className="mt-20 text-center">
@@ -102,22 +190,6 @@ export default function Products() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </button>
-          
-          {/* Stats Section */}
-          {/* <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-[#368899] mb-2">500+</div>
-              <div className="text-gray-600">Products Available</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-[#368899] mb-2">50K+</div>
-              <div className="text-gray-600">Happy Customers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-[#368899] mb-2">24/7</div>
-              <div className="text-gray-600">Customer Support</div>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

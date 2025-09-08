@@ -1,7 +1,8 @@
 "use client"
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   HomeIcon, 
   FAQIcon, 
@@ -15,9 +16,12 @@ import {
 } from '../icons';
 import { categories } from '../categories';
 export default function Header() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -36,6 +40,63 @@ export default function Header() {
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 const [showMobileDropdown, setShowMobileDropdown] = useState(false);
+
+  useEffect(() => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const rawUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      if (!token) {
+        setCurrentUser(null);
+        setIsAuthChecking(false);
+        return;
+      }
+      (async () => {
+        try {
+          const res = await fetch('/api/auth/validate-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionToken: token })
+          });
+          const data = await res.json();
+          if (data?.success) {
+            const parsed = rawUser ? JSON.parse(rawUser) : null;
+            setCurrentUser(parsed);
+          } else {
+            setCurrentUser(null);
+          }
+        } catch {
+          setCurrentUser(null);
+        } finally {
+          setIsAuthChecking(false);
+        }
+      })();
+    } catch {
+      setCurrentUser(null);
+      setIsAuthChecking(false);
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionToken: token, allDevices: false })
+        });
+      }
+    } catch {}
+    finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      }
+      setCurrentUser(null);
+      router.replace('/customer/login');
+    }
+  };
 
   return (
     <header className="w-full font-sans bg-white shadow-lg relative">
@@ -70,9 +131,20 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               <span className="text-sm font-medium">Menu</span>
             </button>
 
-            {/* Right side - Login, Contact, Social Icons (hidden on mobile) */}
+            {/* Right side - Auth, Contact, Social Icons (hidden on mobile) */}
             <div className="hidden md:flex items-center space-x-6">
-              <Link href="/login" className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Login</Link>
+              {isAuthChecking ? (
+                <span className="text-sm opacity-80">Loading...</span>
+              ) : currentUser ? (
+                <div className="flex items-center space-x-3">
+                  <Link href="/customer/account" className="text-sm font-medium hover:text-gray-200 transition-colors">
+                    {currentUser.first_name || currentUser.firstName || currentUser.username || currentUser.email}
+                  </Link>
+                  <button onClick={handleLogout} className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Logout</button>
+                </div>
+              ) : (
+                <Link href="/customer/login" className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Login</Link>
+              )}
               <Link href="/contact" className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Contact</Link>
               
               {/* Social Icons */}
@@ -420,12 +492,21 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/login" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">Login/Register</span>
-                    </Link>
+                    {currentUser ? (
+                      <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899] text-left">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Logout</span>
+                      </button>
+                    ) : (
+                      <Link href="/customer/login" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Login/Register</span>
+                      </Link>
+                    )}
                   </li>
                 </ul>
               </nav>

@@ -1,9 +1,5 @@
-import React from 'react'
+import Products from "@/components/index/Products";
 
-const page = () => {
-  return (
-    <div>page</div>
-  )
+export default function ProductsPage() {
+  return <Products />;
 }
-
-export default page
