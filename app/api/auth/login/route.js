@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { user_db } from '@/lib/db';
+import { old_db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { createSession, logSecurityEvent } from '@/lib/session';
 
@@ -23,9 +23,9 @@ export async function POST(request) {
       );
     }
 
-    // Find user by email
-    const [users] = await user_db.promise().query(
-      'SELECT id, username, password, first_name, last_name, email, active, deleted FROM user_db WHERE email = ? AND deleted = 0',
+    // Find user by email in old customers table
+    const [users] = await old_db.promise().query(
+      'SELECT id, Username, Password, Forename, Surname, Email, Active, Deleted FROM customers WHERE Email = ? AND Deleted = 0',
       [email.toLowerCase().trim()]
     );
 
@@ -41,7 +41,7 @@ export async function POST(request) {
     userId = user.id;
 
     // Check if user is active
-    if (!user.active) {
+    if (!user.Active) {
       await logSecurityEvent(userId, null, 'account_deactivated', 'high', 'Login attempt on deactivated account', request);
       return NextResponse.json(
         { success: false, error: 'Account is deactivated. Please contact support.' },
@@ -49,8 +49,18 @@ export async function POST(request) {
       );
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verify password - check if it's hashed or plain text
+    let isPasswordValid = false;
+    
+    // Check if password is hashed (starts with $2a$ or $2b$)
+    if (user.Password.startsWith('$2a$') || user.Password.startsWith('$2b$')) {
+      // Password is hashed, use bcrypt comparison
+      isPasswordValid = await bcrypt.compare(password, user.Password);
+    } else {
+      // Password is plain text, do direct comparison
+      isPasswordValid = user.Password === password;
+    }
+    
     if (!isPasswordValid) {
       await logSecurityEvent(userId, null, 'failed_login', 'medium', 'Invalid password attempt', request);
       return NextResponse.json(
@@ -67,17 +77,22 @@ export async function POST(request) {
     await logSecurityEvent(userId, sessionId, 'successful_login', 'low', 'User logged in successfully', request);
 
     const loginTime = Date.now() - startTime;
-    console.log(`✅ Login successful for user: ${user.username} (ID: ${userId}) in ${loginTime}ms`);
+    console.log(`✅ Login successful for user: ${user.Username} (ID: ${userId}) in ${loginTime}ms`);
 
-    // Update login analytics with performance data
-    await user_db.promise().query(`
-      UPDATE login_analytics 
-      SET login_success = 1, login_time_ms = ?
-      WHERE session_id = ?
-    `, [loginTime, sessionId]);
+    // Update login analytics with performance data (if table exists)
+    try {
+      await old_db.promise().query(`
+        UPDATE login_analytics 
+        SET login_success = 1, login_time_ms = ?
+        WHERE session_id = ?
+      `, [loginTime, sessionId]);
+    } catch (error) {
+      // Table might not exist, continue without error
+      console.log('Login analytics table not found, skipping update');
+    }
 
-    // Login successful
-    return NextResponse.json({
+    // Login successful - set session cookie
+    const response = NextResponse.json({
       success: true,
       message: 'Login successful',
       session: {
@@ -87,13 +102,24 @@ export async function POST(request) {
       },
       user: {
         id: user.id,
-        username: user.username,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        email: user.email
+        username: user.Username,
+        firstName: user.Forename,
+        lastName: user.Surname,
+        email: user.Email
       },
       loginTime: loginTime
     });
+
+    // Set session token as HTTP-only cookie
+    response.cookies.set('sessionToken', sessionData.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/'
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Login error:', error);

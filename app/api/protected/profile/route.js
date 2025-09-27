@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth, logRequest } from '@/lib/middleware';
-import { user_db } from '@/lib/db';
+import { old_db } from '@/lib/db';
 
 export async function GET(request) {
   try {
@@ -19,13 +19,12 @@ export async function GET(request) {
     // Log the request
     logRequest(request, null, user);
 
-    // Get user profile from database
-    const [users] = await user_db.promise().query(`
-      SELECT id, username, first_name, last_name, email, company, 
-             telephone, mobile, address1, address2, city, postcode, 
-             country, state, type, customer_group, joining_date
-      FROM user_db 
-      WHERE id = ? AND deleted = 0
+    // Get user profile from customers table
+    const [users] = await old_db.promise().query(`
+      SELECT id, Username, Forename, Surname, Email, Company, 
+             Tel, MobileTel, UserType, CustomerGroupID, CreatedDateTime
+      FROM customers 
+      WHERE id = ? AND Deleted = 0
     `, [user.userId]);
 
     if (users.length === 0) {
@@ -42,24 +41,16 @@ export async function GET(request) {
       message: 'Profile retrieved successfully',
       profile: {
         id: userProfile.id,
-        username: userProfile.username,
-        firstName: userProfile.first_name,
-        lastName: userProfile.last_name,
-        email: userProfile.email,
-        company: userProfile.company,
-        telephone: userProfile.telephone,
-        mobile: userProfile.mobile,
-        address: {
-          address1: userProfile.address1,
-          address2: userProfile.address2,
-          city: userProfile.city,
-          postcode: userProfile.postcode,
-          country: userProfile.country,
-          state: userProfile.state
-        },
-        type: userProfile.type,
-        customerGroup: userProfile.customer_group,
-        joiningDate: userProfile.joining_date
+        username: userProfile.Username,
+        firstName: userProfile.Forename,
+        lastName: userProfile.Surname,
+        email: userProfile.Email,
+        company: userProfile.Company,
+        telephone: userProfile.Tel,
+        mobile: userProfile.MobileTel,
+        type: userProfile.UserType,
+        customerGroup: userProfile.CustomerGroupID,
+        joiningDate: userProfile.CreatedDateTime
       }
     });
 
@@ -90,16 +81,15 @@ export async function PUT(request) {
     // Log the request
     logRequest(request, null, user);
 
-    // Update user profile
-    const { firstName, lastName, company, telephone, mobile, address1, address2, city, postcode, country, state } = body;
+    // Update user profile in customers table
+    const { firstName, lastName, company, telephone, mobile } = body;
 
-    await user_db.promise().query(`
-      UPDATE user_db 
-      SET first_name = ?, last_name = ?, company = ?, telephone = ?, mobile = ?,
-          address1 = ?, address2 = ?, city = ?, postcode = ?, country = ?, state = ?,
-          updated_at = NOW()
-      WHERE id = ? AND deleted = 0
-    `, [firstName, lastName, company, telephone, mobile, address1, address2, city, postcode, country, state, user.userId]);
+    await old_db.promise().query(`
+      UPDATE customers 
+      SET Forename = ?, Surname = ?, Company = ?, Tel = ?, MobileTel = ?,
+          ModifiedDateTime = NOW()
+      WHERE id = ? AND Deleted = 0
+    `, [firstName, lastName, company, telephone, mobile, user.userId]);
 
     return NextResponse.json({
       success: true,

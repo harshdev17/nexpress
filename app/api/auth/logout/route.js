@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logoutSession, logSecurityEvent } from '@/lib/session';
-import { user_db } from '@/lib/db';
+import { old_db } from '@/lib/db';
 
 export async function POST(request) {
   try {
@@ -16,12 +16,22 @@ export async function POST(request) {
 
     if (sessionId) {
       // Logout by sessionId
-      await user_db.promise().query(
-        `UPDATE user_sessions SET is_active = 0, logout_time = NOW(), logout_reason = ? WHERE id = ?`,
-        [reason, sessionId]
+      await old_db.promise().query(
+        `UPDATE user_sessions SET is_active = 0 WHERE id = ?`,
+        [sessionId]
       );
       await logSecurityEvent(null, sessionId, 'user_logout', 'low', `User logged out session ${sessionId}: ${reason}`, request);
-      return NextResponse.json({ success: true, message: 'Session logged out successfully' });
+      
+      // Clear session cookie
+      const response = NextResponse.json({ success: true, message: 'Session logged out successfully' });
+      response.cookies.set('sessionToken', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/'
+      });
+      return response;
     }
 
     // Logout by token (default)
@@ -29,7 +39,17 @@ export async function POST(request) {
     
     if (success) {
       await logSecurityEvent(null, null, 'user_logout', 'low', `User logged out: ${reason}`, request);
-      return NextResponse.json({ success: true, message: 'Logout successful' });
+      
+      // Clear session cookie
+      const response = NextResponse.json({ success: true, message: 'Logout successful' });
+      response.cookies.set('sessionToken', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/'
+      });
+      return response;
     } else {
       return NextResponse.json(
         { success: false, error: 'Logout failed' },

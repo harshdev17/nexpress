@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { user_db } from '@/lib/db';
+import { old_db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
@@ -59,16 +59,16 @@ export async function POST(request) {
       );
     }
 
-    // Check if email already exists - Enhanced checking
-    const [existingUsers] = await user_db.promise().query(
-      'SELECT id, username, email, active, deleted FROM user_db WHERE email = ?',
+    // Check if email already exists in customers table
+    const [existingUsers] = await old_db.promise().query(
+      'SELECT id, Username, Email, Active, Deleted FROM customers WHERE Email = ?',
       [email.toLowerCase().trim()]
     );
 
     if (existingUsers.length > 0) {
       const existingUser = existingUsers[0];
       
-      if (existingUser.deleted === 1) {
+      if (existingUser.Deleted === 1) {
         console.log(`Registration failed - email previously deleted: ${email}`);
         return NextResponse.json(
           { success: false, error: 'This email was previously registered but the account has been deleted. Please contact support to reactivate.' },
@@ -76,7 +76,7 @@ export async function POST(request) {
         );
       }
       
-      if (existingUser.active === 0) {
+      if (existingUser.Active === 0) {
         console.log(`Registration failed - email account deactivated: ${email}`);
         return NextResponse.json(
           { success: false, error: 'This email is already registered but the account is deactivated. Please contact support to reactivate your account.' },
@@ -98,8 +98,8 @@ export async function POST(request) {
 
     // Check if username exists and generate unique one
     while (true) {
-      const [existingUsernames] = await user_db.promise().query(
-        'SELECT id FROM user_db WHERE username = ? AND deleted = 0',
+      const [existingUsernames] = await old_db.promise().query(
+        'SELECT id FROM customers WHERE Username = ? AND Deleted = 0',
         [username]
       );
 
@@ -114,53 +114,63 @@ export async function POST(request) {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insert new user with all required fields
-    const [result] = await user_db.promise().query(`
-      INSERT INTO user_db (
-        username,
-        password,
-        company,
-        first_name,
-        last_name,
-        telephone,
-        mobile,
-        email,
-        address1,
-        address2,
-        city,
-        postcode,
-        country,
-        state,
-        type,
-        customer_group,
-        customer_reference,
-        special_customer,
-        active,
-        deleted,
-        joining_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    // Insert new user into customers table
+    const [result] = await old_db.promise().query(`
+      INSERT INTO customers (
+        CreatedDateTime,
+        ModifiedDateTime,
+        CustomerGroupID,
+        SalesAgentAdminUserID,
+        CustomerReference,
+        Username,
+        Password,
+        Forename,
+        Surname,
+        Company,
+        FileAsName,
+        Email,
+        Tel,
+        MobileTel,
+        Fax,
+        UserType,
+        BillingAddressSame,
+        HowDidYouHear,
+        TaxReference,
+        TaxStatus,
+        IsSpecialCustomer,
+        DefaultDeliveryAddressID,
+        DefaultBillingAddressID,
+        Active,
+        Notes,
+        Deleted
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
+      new Date(), // CreatedDateTime
+      new Date(), // ModifiedDateTime
+      3, // CustomerGroupID
+      0, // SalesAgentAdminUserID
+      null, // CustomerReference
       username,
-      hashedPassword,
-      company || null,
+      hashedPassword, // Store hashed password
       firstName.trim(),
       lastName.trim(),
-      telephone.trim(),
-      mobile ? mobile.trim() : null,
+      company || '',
+      `${firstName} ${lastName}`, // FileAsName
       email.toLowerCase().trim(),
-      address1.trim(),
-      address2 ? address2.trim() : null,
-      city.trim(),
-      postcode.trim(),
-      country.trim(),
-      state ? state.trim() : null,
-      'retail', // Fixed value as requested
-      3, // Fixed value as requested
-      null, // customer_reference - null as requested
-      'no', // special_customer - 'no' as requested
-      1, // active
-      0, // deleted
-      new Date() // joining_date
+      telephone.trim(),
+      mobile ? mobile.trim() : '',
+      '', // Fax
+      'Standard', // UserType
+      0, // BillingAddressSame
+      '', // HowDidYouHear
+      '', // TaxReference
+      'Taxable', // TaxStatus
+      0, // IsSpecialCustomer
+      0, // DefaultDeliveryAddressID
+      0, // DefaultBillingAddressID
+      1, // Active
+      '', // Notes
+      0 // Deleted
     ]);
 
     console.log(`New user registered: ${username} (ID: ${result.insertId})`);
