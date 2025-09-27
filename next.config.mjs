@@ -9,7 +9,15 @@
 const nextConfig = {
     images: {
       // Allow optimization for local images in the public directory
-      domains: [], // Leave empty if only using local images; add remote domains if needed (e.g., ["example.com"])
+      domains: ["localhost"],
+      remotePatterns: [
+        {
+          protocol: "http",
+          hostname: "localhost",
+          port: "8010",
+          pathname: "/product/**",
+        },
+      ],
       formats: ["image/webp", "image/avif"], // Enable modern formats for optimization
       minimumCacheTTL: 60, // Cache optimized images for 60 seconds (adjust as needed)
       dangerouslyAllowSVG: false, // Set to true if using SVG images, but be cautious with security
