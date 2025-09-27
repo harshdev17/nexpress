@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
 import { 
   HomeIcon, 
   FAQIcon, 
@@ -14,14 +15,19 @@ import {
   ChevronDownIcon, 
   SearchIcon 
 } from '../icons';
-import { categories } from '../categories';
+// Dynamic categories will be fetched from API
 export default function Header() {
   const router = useRouter();
+  const { items, getCartTotals } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [menuCategories, setMenuCategories] = useState([]);
+
+  // Get cart totals
+  const cartTotals = getCartTotals();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -36,7 +42,34 @@ export default function Header() {
   };
 
   // Dropdown categories data
-  
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/categories', { cache: 'no-store' });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.categories)) {
+          const slugify = (p, name) => {
+            const s = (p && String(p).trim()) || '';
+            if (s) return s;
+            return String(name || '')
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+          };
+          const mapNode = (n) => ({
+            name: n.CatName,
+            url: `/categories/${encodeURIComponent(slugify(n.PageName, n.CatName))}`,
+            subcategories: Array.isArray(n.children) ? n.children.map(mapNode) : []
+          });
+          setMenuCategories(data.categories.map(mapNode));
+        } else {
+          setMenuCategories([]);
+        }
+      } catch {
+        setMenuCategories([]);
+      }
+    })();
+  }, []);
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 const [showMobileDropdown, setShowMobileDropdown] = useState(false);
@@ -174,14 +207,16 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               </Link>
               
               {/* Cart Icon */}
-              <div className="group cursor-pointer">
+              <Link href="/cart" className="group cursor-pointer">
                 <div className="relative">
                   <ShoppingCartIcon className="w-6 h-6 text-white transition-colors duration-300 group-hover:text-gray-200" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    0
-                  </div>
+                  {cartTotals.itemCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                      {cartTotals.itemCount}
+                    </div>
+                  )}
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -236,20 +271,24 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
 
             {/* Shopping Cart (Desktop) */}
             <div className="hidden md:flex items-center justify-center lg:justify-end">
-              <div className="group cursor-pointer">
+              <Link href="/cart" className="group cursor-pointer">
                 <div className="flex items-center space-x-3 bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 rounded-xl border border-gray-200 hover:border-[#368899] hover:shadow-md transition-all duration-300">
                   <div className="relative">
                     <ShoppingCartIcon className="w-6 h-6 text-gray-700 group-hover:text-[#368899] transition-colors duration-300" />
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#368899] text-white text-xs rounded-full flex items-center justify-center font-bold">
-                      0
-                    </div>
+                    {cartTotals.itemCount > 0 && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#368899] text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {cartTotals.itemCount}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">0 Items</span>
-                    <span className="text-sm font-bold text-[#368899]">£0.00</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {cartTotals.itemCount} {cartTotals.itemCount === 1 ? 'Item' : 'Items'}
+                    </span>
+                    <span className="text-sm font-bold text-[#368899]">£{cartTotals.total.toFixed(2)}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -275,10 +314,10 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                 {isCategoryDropdownOpen && (
   <div className="absolute left-0 top-full mt-2 min-w-[1100px] bg-white rounded-lg shadow-md border border-gray-100 z-50 p-4 transition-all duration-200 ease-in-out opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0">
   <div className="grid grid-cols-4 gap-2">
-    {categories.map((category, idx) => (
+    {menuCategories.map((category, idx) => (
       <Link 
         key={idx} 
-        href={`/${category.url}`}
+        href={category.url}
         className="flex items-center space-x-2 px-3 py-2 hover:bg-[#368899]/5 rounded-md transition-colors duration-200"
       >
         {/* <svg className="w-4 h-4 text-[#368899] shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -390,7 +429,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                 
                 {isCategoryDropdownOpen && (
                   <div className="mt-3 max-h-64 overflow-y-auto">
-                    {categories.map((category, index) => (
+                    {menuCategories.map((category, index) => (
                       <div key={index} className="mb-3">
                         <Link 
                           href={category.url}

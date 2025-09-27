@@ -8,6 +8,15 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const slugify = (p, name) => {
+    const s = (p && String(p).trim()) || '';
+    if (s) return s.toLowerCase();
+    return String(name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -160,12 +169,16 @@ export default function Products() {
                   id={product.id}
                   title={product.ItemName}
                   description={product.ItemShortDesc || "Product description"}
-                  originalPrice={`£${parseFloat(product.ItemPrice).toFixed(2)}`}
-                  discountedPrice={`£${parseFloat(product.ItemPrice).toFixed(2)}`}
+                  originalPrice={product.isOnSale && product.salePrice > 0 ? `£${product.ItemPrice.toFixed(2)}` : `£${product.ItemPrice.toFixed(2)}`}
+                  discountedPrice={product.isOnSale && product.salePrice > 0 ? `£${product.salePrice.toFixed(2)}` : `£${product.ItemPrice.toFixed(2)}`}
                   imageSrc={product.ItemMainImage || "/products/1.jpg"}
                   brand={product.Brand}
                   isSoldOut={product.IsSoldOut === 1}
                   category={product.Category}
+                  isOnSale={product.isOnSale && product.salePrice > 0}
+                  salePrice={product.salePrice}
+                  href={`/products/${encodeURIComponent(slugify(product.CategoryPageName, product.Category))}/${encodeURIComponent(slugify(product.PageName, product.ItemName))}`}
+                  product={product}
                 />
               </div>
             ))}

@@ -1,14 +1,39 @@
 "use client";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { categories } from "../categories";
 
 export default function CategorySection() {
   const sliderRef = useRef(null);
+  const [mainCategories, setMainCategories] = useState([]);
 
-  // Get categories for display and duplicate for infinite loop
-  const displayCategories = categories.slice(0, 10);
-  const duplicatedCategories = [...displayCategories, ...displayCategories, ...displayCategories];
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/categories', { cache: 'no-store' });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.categories)) {
+          const roots = data.categories || [];
+          const slugify = (p, name) => {
+            const s = (p && String(p).trim()) || '';
+            if (s) return s;
+            return String(name || '')
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+          };
+          const mapNode = (n) => ({ name: n.CatName, url: `/categories/${encodeURIComponent(slugify(n.PageName, n.CatName))}` });
+          setMainCategories(roots.map(mapNode));
+        } else {
+          setMainCategories([]);
+        }
+      } catch {
+        setMainCategories([]);
+      }
+    })();
+  }, []);
+
+  // Duplicate for smooth infinite scroll
+  const duplicatedCategories = [...mainCategories, ...mainCategories, ...mainCategories];
 
   const scrollLeft = () => {
     sliderRef.current.scrollBy({ left: -300, behavior: 'smooth' });

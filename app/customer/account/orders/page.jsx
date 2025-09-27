@@ -1,75 +1,96 @@
 "use client"
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
-import { useState } from "react";
-
-// export const metadata = {
-//   title: "My Orders | Nexpress Delivery",
-//   description: "View your order history and track current orders.",
-// };
+import { useState, useEffect } from "react";
 
 export default function OrdersPage() {
   const [search, setSearch] = useState("");
-  const orders = [
-    {
-      id: "ORD-001",
-      date: "2024-01-15",
-      status: "Delivered",
-      total: "£45.99",
-      items: [
-        { name: "Heineken Lager 330ml", quantity: 12, price: "£2.99" },
-        { name: "Corona Extra 330ml", quantity: 6, price: "£3.49" }
-      ]
-    },
-    {
-      id: "ORD-002",
-      date: "2024-01-10",
-      status: "In Transit",
-      total: "£32.50",
-      items: [
-        { name: "Budweiser 330ml", quantity: 10, price: "£2.50" },
-        { name: "Stella Artois 330ml", quantity: 8, price: "£2.99" }
-      ]
-    },
-    {
-      id: "ORD-003",
-      date: "2024-01-05",
-      status: "Delivered",
-      total: "£28.75",
-      items: [
-        { name: "Peroni Nastro Azzurro 330ml", quantity: 15, price: "£1.75" }
-      ]
+  const [orders, setOrders] = useState([]);
+  const [totalSpent, setTotalSpent] = useState("0.00");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      
+      // Get session token from localStorage
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No session token found. Please login again.');
+        return;
+      }
+      
+      const response = await fetch('/api/protected/orders', {
+        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setOrders(data.orders || []);
+        setTotalSpent(data.totalSpent || "0.00");
+      } else {
+        setError(data.error || 'Failed to load orders');
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Delivered":
+    switch (status?.toLowerCase()) {
+      case "delivered":
+      case "completed":
         return "bg-green-100 text-green-800 border-green-200";
-      case "In Transit":
+      case "shipped":
+      case "in transit":
+      case "dispatched":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Processing":
+      case "processing":
+      case "pending":
+      case "confirmed":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "cancelled":
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case "Delivered":
+    switch (status?.toLowerCase()) {
+      case "delivered":
+      case "completed":
         return (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
         );
-      case "In Transit":
+      case "shipped":
+      case "in transit":
+      case "dispatched":
         return (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         );
-      case "Processing":
+      case "processing":
+      case "pending":
+      case "confirmed":
         return (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -86,8 +107,8 @@ export default function OrdersPage() {
 
   // Filter orders by search
   const filteredOrders = orders.filter(order =>
-    order.id.toLowerCase().includes(search.toLowerCase()) ||
-    order.items.some(item => item.name.toLowerCase().includes(search.toLowerCase()))
+    String(order.OrderNumber || '').toLowerCase().includes(search.toLowerCase()) ||
+    order.items?.some(item => item.productName?.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -131,11 +152,13 @@ export default function OrdersPage() {
           <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Order History</h2>
-              <p className="text-gray-600">You have {orders.length} orders in total</p>
+              <p className="text-gray-600">
+                {loading ? 'Loading orders...' : `You have ${orders.length} orders in total`}
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200">
-                <span className="text-sm font-medium">Total Spent: £1,247</span>
+                <span className="text-sm font-medium">Total Spent: £{totalSpent}</span>
               </div>
               <input
                 type="text"
@@ -147,7 +170,36 @@ export default function OrdersPage() {
             </div>
           </div>
 
-          {filteredOrders.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-12 h-12 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Loading Orders...</h3>
+              <p className="text-gray-600">Please wait while we fetch your order history.</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-red-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Error Loading Orders</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
+              <button
+                onClick={fetchOrders}
+                className="inline-flex items-center px-8 py-4 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg"
+              >
+                Try Again
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          ) : filteredOrders.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
                 <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,10 +227,10 @@ export default function OrdersPage() {
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
                     <div className="flex items-center space-x-4 mb-4 lg:mb-0">
                       <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-xl text-sm font-bold">
-                        {order.id}
+                        {order.OrderNumber || `#${order.id}`}
                       </div>
                       <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-lg">
-                        {new Date(order.date).toLocaleDateString('en-GB', { 
+                        {new Date(order.OrderDateTime || order.CreatedDateTime).toLocaleDateString('en-GB', { 
                           year: 'numeric', 
                           month: 'long', 
                           day: 'numeric' 
@@ -186,42 +238,50 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
-                      <span className={`px-4 py-2 rounded-xl text-sm font-medium border ${getStatusColor(order.status)} flex items-center space-x-2`}>
-                        {getStatusIcon(order.status)}
-                        <span>{order.status}</span>
+                      <span className={`px-4 py-2 rounded-xl text-sm font-medium border ${getStatusColor(order.OrderStatus)} flex items-center space-x-2`}>
+                        {getStatusIcon(order.OrderStatus)}
+                        <span>{order.OrderStatus || 'Unknown'}</span>
                       </span>
                       <div className="text-right">
                         <span className="text-sm text-gray-600">Total</span>
-                        <p className="text-2xl font-bold text-gray-900">{order.total}</p>
+                        <p className="text-2xl font-bold text-gray-900">£{parseFloat(order.TotalAmount || 0).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3 mb-6">
-                    {order.items.map((item, index) => (
+                    {order.items?.map((item, index) => (
                       <div key={index} className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                         <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            {item.image ? (
+                              <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
+                            ) : (
+                              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                              </svg>
+                            )}
                           </div>
                           <div>
-                            <span className="text-gray-900 font-medium">{item.name}</span>
+                            <span className="text-gray-900 font-medium">{item.productName}</span>
                             <div className="flex items-center space-x-2 mt-1">
                               <span className="text-gray-500 text-sm">Qty: {item.quantity}</span>
                               <span className="text-gray-400">•</span>
-                              <span className="text-gray-600 font-medium">{item.price}</span>
+                              <span className="text-gray-600 font-medium">£{item.unitPrice.toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
                           <span className="text-lg font-bold text-gray-900">
-                            £{(parseFloat(item.price.replace('£', '')) * item.quantity).toFixed(2)}
+                            £{item.totalPrice.toFixed(2)}
                           </span>
                         </div>
                       </div>
-                    ))}
+                    )) || (
+                      <div className="text-center py-4 text-gray-500">
+                        No items found for this order
+                      </div>
+                    )}
                   </div>
 
                   <div className="pt-4 border-t border-gray-200">
@@ -237,7 +297,7 @@ export default function OrdersPage() {
                           </svg>
                           View Details
                         </Link>
-                        {order.status === "In Transit" && (
+                        {(order.OrderStatus?.toLowerCase() === "shipped" || order.OrderStatus?.toLowerCase() === "in transit" || order.OrderStatus?.toLowerCase() === "dispatched") && (
                           <Link
                             href={`/customer/account/orders/${order.id}/track`}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -249,7 +309,7 @@ export default function OrdersPage() {
                           </Link>
                         )}
                       </div>
-                      {order.status === "Delivered" && (
+                      {(order.OrderStatus?.toLowerCase() === "delivered" || order.OrderStatus?.toLowerCase() === "completed") && (
                         <button className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors">
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />

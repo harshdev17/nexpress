@@ -1,56 +1,115 @@
+"use client"
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
-
-export const metadata = {
-  title: "Address Book | Nexpress Delivery",
-  description: "Manage your delivery addresses and preferences.",
-};
+import { useState, useEffect } from "react";
 
 export default function AddressesPage() {
-  const addresses = [
-    {
-      id: 1,
-      type: "Home",
-      isDefault: true,
-      name: "John Smith",
-      company: "Personal",
-      address1: "123 Main Street",
-      address2: "Apartment 4B",
-      city: "London",
-      postcode: "SW1A 1AA",
-      country: "United Kingdom",
-      state: "England",
-      phone: "+44 20 7946 0958"
-    },
-    {
-      id: 2,
-      type: "Office",
-      isDefault: false,
-      name: "John Smith",
-      company: "Tech Solutions Ltd",
-      address1: "456 Business Park",
-      address2: "Floor 3, Suite 301",
-      city: "Manchester",
-      postcode: "M1 1AA",
-      country: "United Kingdom",
-      state: "England",
-      phone: "+44 161 496 0000"
-    },
-    {
-      id: 3,
-      type: "Summer House",
-      isDefault: false,
-      name: "John Smith",
-      company: "Personal",
-      address1: "789 Coastal Road",
-      address2: "",
-      city: "Brighton",
-      postcode: "BN1 1AA",
-      country: "United Kingdom",
-      state: "England",
-      phone: "+44 1273 000000"
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
+
+  const fetchAddresses = async () => {
+    try {
+      setLoading(true);
+      
+      // Get session token from localStorage
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No session token found. Please login again.');
+        return;
+      }
+      
+      const response = await fetch('/api/protected/addresses', {
+        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch addresses');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setAddresses(data.addresses || []);
+      } else {
+        setError(data.error || 'Failed to load addresses');
+      }
+    } catch (err) {
+      console.error('Error fetching addresses:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    if (!confirm('Are you sure you want to delete this address?')) return;
+    
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No session token found. Please login again.');
+        return;
+      }
+      
+      const response = await fetch(`/api/protected/addresses?id=${addressId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        await fetchAddresses(); // Refresh the list
+      } else {
+        alert('Failed to delete address');
+      }
+    } catch (err) {
+      console.error('Error deleting address:', err);
+      alert('Failed to delete address');
+    }
+  };
+
+  const handleSetDefault = async (addressId) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No session token found. Please login again.');
+        return;
+      }
+      
+      const address = addresses.find(addr => addr.id === addressId);
+      if (!address) return;
+
+      const response = await fetch('/api/protected/addresses', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          addressId,
+          ...address,
+          isDefault: true
+        })
+      });
+      
+      if (response.ok) {
+        await fetchAddresses(); // Refresh the list
+      } else {
+        alert('Failed to set default address');
+      }
+    } catch (err) {
+      console.error('Error setting default address:', err);
+      alert('Failed to set default address');
+    }
+  };
 
   return (
     <main className="w-full bg-gray-50 min-h-screen">
@@ -93,9 +152,14 @@ export default function AddressesPage() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Addresses</h2>
-              <p className="text-gray-600">You have {addresses.length} saved addresses</p>
+              <p className="text-gray-600">
+                {loading ? 'Loading addresses...' : `You have ${addresses.length} saved addresses`}
+              </p>
             </div>
-            <button className="inline-flex items-center px-6 py-3 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg">
+            <button 
+              onClick={() => setShowAddForm(true)}
+              className="inline-flex items-center px-6 py-3 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg"
+            >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -103,7 +167,36 @@ export default function AddressesPage() {
             </button>
           </div>
 
-          {addresses.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-12 h-12 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Loading Addresses...</h3>
+              <p className="text-gray-600">Please wait while we fetch your saved addresses.</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-red-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+                <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Error Loading Addresses</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
+              <button
+                onClick={fetchAddresses}
+                className="inline-flex items-center px-8 py-4 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg"
+              >
+                Try Again
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          ) : addresses.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
                 <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +207,10 @@ export default function AddressesPage() {
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 Add your frequently used delivery addresses for a faster checkout experience.
               </p>
-              <button className="inline-flex items-center px-8 py-4 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg">
+              <button 
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex items-center px-8 py-4 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg"
+              >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
@@ -158,14 +254,20 @@ export default function AddressesPage() {
                       </svg>
                       Edit
                     </button>
-                    <button className="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200">
+                    <button 
+                      onClick={() => handleDeleteAddress(address.id)}
+                      className="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                    >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                       Delete
                     </button>
                     {!address.isDefault && (
-                      <button className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+                      <button 
+                        onClick={() => handleSetDefault(address.id)}
+                        className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                      >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -199,7 +301,10 @@ export default function AddressesPage() {
                     </svg>
                     Export Addresses
                   </button>
-                  <button className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors">
+                  <button 
+                    onClick={() => setShowAddForm(true)}
+                    className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors"
+                  >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>

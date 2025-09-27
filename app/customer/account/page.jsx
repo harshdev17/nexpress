@@ -1,31 +1,95 @@
 
+"use client"
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
-
-export const metadata = {
-  title: "My Account | Nexpress Delivery",
-  description: "Manage your Nexpress Delivery account, orders, and preferences.",
-};
+import { useState, useEffect } from "react";
 
 export default function AccountPage() {
+  const [profile, setProfile] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get session token from localStorage
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No session token found. Please login again.');
+        return;
+      }
+      
+      // Fetch profile, orders, and addresses in parallel
+      const [profileRes, ordersRes, addressesRes] = await Promise.all([
+        fetch('/api/protected/profile', { 
+          credentials: 'include',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/protected/orders', { 
+          credentials: 'include',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/protected/addresses', { 
+          credentials: 'include',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      const [profileData, ordersData, addressesData] = await Promise.all([
+        profileRes.json(),
+        ordersRes.json(),
+        addressesRes.json()
+      ]);
+
+      if (profileData.success) {
+        setProfile(profileData.profile);
+      }
+      
+      if (ordersData.success) {
+        setOrders(ordersData.orders || []);
+      }
+      
+      if (addressesData.success) {
+        setAddresses(addressesData.addresses || []);
+      }
+
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate stats
+  const totalOrders = orders.length;
+  const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.TotalAmount || 0), 0);
+  const totalAddresses = addresses.length;
   return (
     <main className="w-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#368899] to-[#2d7a8a] rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#368899] to-[#2d7a8a] rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  Welcome back{profile ? `, ${profile.Forename || profile.Username || 'User'}!` : '!'}
+                </h1>
+                <p className="text-lg text-gray-600 mt-1">Manage your account, orders, and preferences</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                Welcome back!
-              </h1>
-              <p className="text-lg text-gray-600 mt-1">Manage your account, orders, and preferences</p>
-            </div>
-          </div>
         </div>
 
         {/* Account Tabs */}
@@ -43,7 +107,7 @@ export default function AccountPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                    <p className="text-3xl font-bold text-gray-900">24</p>
+                    <p className="text-3xl font-bold text-gray-900">{loading ? '...' : totalOrders}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,8 +126,8 @@ export default function AccountPage() {
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Favourites</p>
-                    <p className="text-3xl font-bold text-gray-900">18</p>
+                    <p className="text-sm font-medium text-gray-600">Saved Addresses</p>
+                    <p className="text-3xl font-bold text-gray-900">{loading ? '...' : totalAddresses}</p>
                   </div>
                   <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +147,7 @@ export default function AccountPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                    <p className="text-3xl font-bold text-gray-900">£1,247</p>
+                    <p className="text-3xl font-bold text-gray-900">{loading ? '...' : `£${totalSpent.toFixed(2)}`}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,44 +174,46 @@ export default function AccountPage() {
               </div>
               
               <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto mb-4 animate-pulse"></div>
+                    <p className="text-gray-500">Loading recent activity...</p>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Order #ORD-001 delivered</p>
-                    <p className="text-sm text-gray-600">Heineken Lager & Corona Extra</p>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500">No recent orders</p>
+                    <Link href="/" className="text-[#368899] hover:text-[#2d7a8a] text-sm font-medium">
+                      Start shopping →
+                    </Link>
                   </div>
-                  <span className="text-sm text-gray-500">2 hours ago</span>
-                </div>
-
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Added to favourites</p>
-                    <p className="text-sm text-gray-600">Stella Artois 330ml</p>
-                  </div>
-                  <span className="text-sm text-gray-500">1 day ago</span>
-                </div>
-
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">New address added</p>
-                    <p className="text-sm text-gray-600">Office address in Central London</p>
-                  </div>
-                  <span className="text-sm text-gray-500">3 days ago</span>
-                </div>
+                ) : (
+                  orders.slice(0, 3).map((order) => (
+                    <div key={order.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">Order {order.OrderNumber || `#${order.id}`}</p>
+                        <p className="text-sm text-gray-600">
+                          {order.items?.length > 0 
+                            ? `${order.items.length} item${order.items.length > 1 ? 's' : ''} • £${parseFloat(order.TotalAmount || 0).toFixed(2)}`
+                            : `£${parseFloat(order.TotalAmount || 0).toFixed(2)}`
+                          }
+                        </p>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {new Date(order.OrderDate || order.CreatedDateTime).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
