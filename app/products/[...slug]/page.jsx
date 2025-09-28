@@ -54,7 +54,18 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   
   if (!resolvedProduct) {
     // Fallback: search by slugified ItemName within parent category
-    const parentSlug = parts.length > 1 ? decodeURIComponent(parts[parts.length - 2] || '').toLowerCase() : (parts[0] || '').toLowerCase();
+    let parentSlug;
+    if (parts.length === 2) {
+      // products/cat/productslug - category is parts[0]
+      parentSlug = decodeURIComponent(parts[0] || '').toLowerCase();
+    } else if (parts.length === 3) {
+      // products/cat/subcat/productslug - subcategory is parts[1]
+      parentSlug = decodeURIComponent(parts[1] || '').toLowerCase();
+    } else {
+      // Fallback to first part
+      parentSlug = decodeURIComponent(parts[0] || '').toLowerCase();
+    }
+    
     const parentCat = (allCats || []).find(c => slugify(c.PageName, c.CatName) === parentSlug);
     
     if (parentCat && parentCat.id) {
