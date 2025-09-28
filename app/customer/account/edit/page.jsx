@@ -287,7 +287,7 @@ export default function EditAccountPage() {
                 </div>
                 <div>
                   <label htmlFor="customerReference" className="block text-sm font-medium text-gray-700 mb-2">
-                    Customer Reference
+                    Ref/Acct No
                   </label>
                   <input
                     type="text"
@@ -299,7 +299,7 @@ export default function EditAccountPage() {
                 </div>
                 <div>
                   <label htmlFor="fileAsName" className="block text-sm font-medium text-gray-700 mb-2">
-                    File As Name
+                    Display / File name
                   </label>
                   <input
                     type="text"
@@ -311,7 +311,7 @@ export default function EditAccountPage() {
                 </div>
                 <div>
                   <label htmlFor="taxReference" className="block text-sm font-medium text-gray-700 mb-2">
-                    Tax Reference
+                    VAT No
                   </label>
                   <input
                     type="text"
@@ -323,7 +323,7 @@ export default function EditAccountPage() {
                 </div>
                 <div>
                   <label htmlFor="taxStatus" className="block text-sm font-medium text-gray-700 mb-2">
-                    Tax Status
+                    VAT
                   </label>
                   <select
                     id="taxStatus"
@@ -350,6 +350,15 @@ export default function EditAccountPage() {
                     <option value="Standard">Standard</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-1">User type cannot be changed</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Customer Group</label>
+                  <input
+                    type="text"
+                    value={String(profile?.customerGroup ?? '')}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                  />
                 </div>
               </div>
             </div>
@@ -417,6 +426,46 @@ export default function EditAccountPage() {
               </div>
               
               <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Joined</label>
+                    <input
+                      type="text"
+                      value={profile?.joiningDate ? new Date(profile.joiningDate).toLocaleString() : ''}
+                      disabled
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Special Customer</label>
+                    <input
+                      type="text"
+                      value={profile?.isSpecialCustomer ? 'Yes' : 'No'}
+                      disabled
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Default Delivery Address ID</label>
+                    <input
+                      type="text"
+                      value={profile?.defaultDeliveryAddressID ?? ''}
+                      disabled
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Default Billing Address ID</label>
+                    <input
+                      type="text"
+                      value={profile?.defaultBillingAddressID ?? ''}
+                      disabled
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
                     Notes

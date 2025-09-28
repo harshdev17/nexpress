@@ -133,6 +133,19 @@ export function CartProvider({ children }) {
       return total + (price * item.quantity);
     }, 0);
     
+    const itemCount = state.items.reduce((count, item) => count + item.quantity, 0);
+    
+    // Only apply VAT and shipping if there are items in the cart
+    if (itemCount === 0) {
+      return {
+        subtotal: 0,
+        vat: 0,
+        shipping: 0,
+        total: 0,
+        itemCount: 0
+      };
+    }
+    
     const vat = subtotal * 0.2; // 20% VAT
     const shipping = subtotal >= 40 ? 0 : 3.33; // Free shipping over £40
     const total = subtotal + vat + shipping;
@@ -142,7 +155,7 @@ export function CartProvider({ children }) {
       vat: vat,
       shipping: shipping,
       total: total,
-      itemCount: state.items.reduce((count, item) => count + item.quantity, 0)
+      itemCount: itemCount
     };
   };
 
