@@ -9,7 +9,7 @@ import { db, old_db } from '@/lib/db';
 import BrandLogo from '@/components/common/BrandLogo';
 
 async function runQuery(sql, params = []) {
-  const pools = [db, old_db].filter(Boolean);
+  const pools = [old_db].filter(Boolean);
   let last;
   for (const p of pools) {
     try {

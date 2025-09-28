@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { old_db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
@@ -110,11 +109,10 @@ export async function POST(request) {
       counter++;
     }
 
-    // Hash password with higher security
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Generate CustomerReference
+    const customerReference = `CUST${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-    // Insert new user into customers table
+    // Insert new user into customers table (password in plain text for old DB)
     const [result] = await old_db.promise().query(`
       INSERT INTO customers (
         CreatedDateTime,
@@ -149,9 +147,9 @@ export async function POST(request) {
       new Date(), // ModifiedDateTime
       3, // CustomerGroupID
       0, // SalesAgentAdminUserID
-      null, // CustomerReference
+      customerReference, // CustomerReference
       username,
-      hashedPassword, // Store hashed password
+      password, // Store plain text password for old DB
       firstName.trim(),
       lastName.trim(),
       company || '',
