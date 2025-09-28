@@ -6,6 +6,15 @@ import { useWishlist } from "@/contexts/WishlistContext";
 
 export default function FavouritesPage() {
   const { wishlist, clearWishlist, getWishlistCount } = useWishlist();
+  
+  const slugify = (p, name) => {
+    const s = (p && String(p).trim()) || '';
+    if (s) return s.toLowerCase();
+    return String(name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
 
   const getStockColor = (stock) => {
     switch (stock) {
@@ -113,7 +122,7 @@ export default function FavouritesPage() {
                   brand={product.Brand || product.brand}
                   isSoldOut={false}
                   category={product.Category || product.category}
-                  href={`/products/${encodeURIComponent(product.PageName || product.slug || 'product')}`}
+                  href={`/products/${encodeURIComponent(slugify(product.Category || product.category || 'products'))}/${encodeURIComponent(product.PageName || product.slug || 'product')}`}
                   product={product}
                 />
               ))}

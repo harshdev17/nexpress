@@ -41,6 +41,7 @@ export async function GET() {
         p.IsSoldOut,
         p.ItemSalePrice,
         p.ItemIsOnSale,
+        p.PageName,
         pp.Price as discount_price, pp.PriceType, pp.MinQtyForPrice
       FROM products p
       LEFT JOIN product_pricing pp ON p.id = pp.ProductID AND pp.Deleted = 0
@@ -70,6 +71,7 @@ export async function GET() {
           p.IsSoldOut,
           p.ItemSalePrice,
           p.ItemIsOnSale,
+          p.PageName,
           pp.Price as discount_price, pp.PriceType, pp.MinQtyForPrice
         FROM products p
         LEFT JOIN product_pricing pp ON p.id = pp.ProductID AND pp.Deleted = 0

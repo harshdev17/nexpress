@@ -9,7 +9,7 @@ import { db, old_db } from '@/lib/db';
 import BrandLogo from '@/components/common/BrandLogo';
 
 async function runQuery(sql, params = []) {
-  const pools = [old_db, db].filter(Boolean);
+  const pools = [db, old_db].filter(Boolean);
   let last;
   for (const p of pools) {
     try {
@@ -98,7 +98,7 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
 
     // Get related products from same category
     const relatedProducts = await runQuery(
-      `SELECT p.id, p.ItemName, p.ItemPrice, p.ItemMainImage
+      `SELECT p.id, p.ItemName, p.ItemPrice, p.ItemMainImage, p.PageName, p.Brand, p.ItemShortDesc
        FROM products p
        WHERE p.Visible=1 AND p.Deleted=0 AND p.id != ? 
        AND (p.CategoryID1 = ? OR p.CategoryID2 = ?)
@@ -149,7 +149,7 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   const where = isSubCategory ? 'p.CategoryID2 = ?' : 'p.CategoryID1 = ?';
   const rawProducts = await runQuery(
     `SELECT DISTINCT p.id, p.ItemName, p.ItemShortDesc, p.ItemPrice, p.ItemMainImage, p.Brand, p.Featured, p.IsSoldOut,
-            p.ItemSalePrice, p.ItemIsOnSale,
+            p.ItemSalePrice, p.ItemIsOnSale, p.PageName,
             pp.Price as discount_price, pp.PriceType, pp.MinQtyForPrice
      FROM products p
      LEFT JOIN product_pricing pp ON p.id = pp.ProductID AND pp.Deleted = 0
@@ -360,7 +360,7 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
                   brand={p.Brand}
                   isSoldOut={p.IsSoldOut === 1}
                   category={category.CatName}
-                  href={`/products/${encodeURIComponent(slugify(category.PageName, category.CatName))}/${encodeURIComponent(slugify(p.PageName, p.ItemName))}`}
+                  href={`/products/${encodeURIComponent(slugify(category.PageName, category.CatName))}/${encodeURIComponent(p.PageName)}`}
                   product={p}
                 />
               ))}

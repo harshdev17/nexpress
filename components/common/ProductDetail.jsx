@@ -399,7 +399,7 @@ export default function ProductDetail({
                 brand={relatedProduct.Brand}
                 isSoldOut={false}
                 category={category?.CatName}
-                href={`/products/${encodeURIComponent(slugify(relatedProduct.PageName, relatedProduct.ItemName))}`}
+                href={`/products/${encodeURIComponent(slugify(category?.PageName, category?.CatName))}/${encodeURIComponent(relatedProduct.PageName)}`}
                 product={relatedProduct}
               />
             ))}

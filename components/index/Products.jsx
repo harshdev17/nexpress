@@ -172,7 +172,7 @@ export default function Products() {
                   category={product.Category}
                   isOnSale={product.isOnSale && product.salePrice > 0}
                   salePrice={product.salePrice}
-                  href={`/products/${encodeURIComponent(slugify(product.CategoryPageName, product.Category))}/${encodeURIComponent(slugify(product.PageName, product.ItemName))}`}
+                  href={`/products/${encodeURIComponent(slugify(product.Category || 'products'))}/${encodeURIComponent(product.PageName)}`}
                   product={product}
                 />
               </div>
