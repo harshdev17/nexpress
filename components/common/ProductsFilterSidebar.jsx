@@ -24,7 +24,7 @@ function Section({ title, children, defaultOpen = true }) {
   );
 }
 
-export default function ProductsFilterSidebar({ data }) {
+export default function ProductsFilterSidebar({ data, products = [] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -93,6 +93,92 @@ export default function ProductsFilterSidebar({ data }) {
     if (next.has(value)) next.delete(value); else next.add(value);
     return next;
   };
+
+  // Dynamic filter options based on products
+  const getDynamicPackagingOptions = () => {
+    if (!Array.isArray(products) || products.length === 0) {
+      return data?.packagingOptions || [];
+    }
+
+    const packagingSet = new Set();
+    
+    products.forEach(product => {
+      // Check product name for packaging keywords
+      const name = (product.ItemName || '').toLowerCase();
+      const description = (product.ItemShortDesc || '').toLowerCase();
+      const brand = (product.Brand || '').toLowerCase();
+      
+      // Glass packaging detection
+      if (name.includes('glass') || description.includes('glass') || 
+          name.includes('bottle') && (name.includes('glass') || description.includes('glass')) ||
+          name.includes('jar') || description.includes('jar') ||
+          name.includes('vial') || description.includes('vial')) {
+        packagingSet.add('Glass');
+      }
+      
+      // Plastic packaging detection
+      if (name.includes('plastic') || description.includes('plastic') || 
+          name.includes('bottle') && (name.includes('plastic') || description.includes('plastic')) ||
+          name.includes('pet') || description.includes('pet') ||
+          name.includes('pvc') || description.includes('pvc') ||
+          name.includes('container') && (name.includes('plastic') || description.includes('plastic'))) {
+        packagingSet.add('Plastic');
+      }
+      
+      // Carton/Can packaging detection
+      if (name.includes('carton') || description.includes('carton') || 
+          name.includes('can') || description.includes('can') ||
+          name.includes('tin') || description.includes('tin') ||
+          name.includes('aluminum') || description.includes('aluminum') ||
+          name.includes('aluminium') || description.includes('aluminium') ||
+          name.includes('tetra') || description.includes('tetra') ||
+          name.includes('box') && (name.includes('carton') || description.includes('carton'))) {
+        packagingSet.add('Carton/Can');
+      }
+    });
+
+    return Array.from(packagingSet).sort();
+  };
+
+  const getDynamicWaterTypeOptions = () => {
+    if (!Array.isArray(products) || products.length === 0) {
+      return data?.waterTypeOptions || [];
+    }
+
+    const waterTypeSet = new Set();
+    
+    products.forEach(product => {
+      const name = (product.ItemName || '').toLowerCase();
+      const description = (product.ItemShortDesc || '').toLowerCase();
+      
+      // Still water detection
+      if (name.includes('still') || description.includes('still') ||
+          name.includes('natural') || description.includes('natural') ||
+          name.includes('spring') || description.includes('spring') ||
+          name.includes('mineral') || description.includes('mineral') ||
+          name.includes('purified') || description.includes('purified') ||
+          name.includes('distilled') || description.includes('distilled') ||
+          name.includes('filtered') || description.includes('filtered')) {
+        waterTypeSet.add('Still');
+      }
+      
+      // Sparkling water detection
+      if (name.includes('sparkling') || description.includes('sparkling') ||
+          name.includes('carbonated') || description.includes('carbonated') ||
+          name.includes('fizzy') || description.includes('fizzy') ||
+          name.includes('bubbly') || description.includes('bubbly') ||
+          name.includes('soda') || description.includes('soda') ||
+          name.includes('effervescent') || description.includes('effervescent') ||
+          name.includes('bubbles') || description.includes('bubbles')) {
+        waterTypeSet.add('Sparkling');
+      }
+    });
+
+    return Array.from(waterTypeSet).sort();
+  };
+
+  const dynamicPackagingOptions = getDynamicPackagingOptions();
+  const dynamicWaterTypeOptions = getDynamicWaterTypeOptions();
 
   // Compute selected chips
   const chips = [];
@@ -205,9 +291,9 @@ export default function ProductsFilterSidebar({ data }) {
 
       {/* Sub Categories section is now nested inside Browse Categories */}
       
-      {Array.isArray(data?.packagingOptions) && data.packagingOptions.length > 0 && (
+      {dynamicPackagingOptions.length > 0 && (
         <Section title="Packaging" defaultOpen={true}>
-          {data.packagingOptions.map(opt => (
+          {dynamicPackagingOptions.map(opt => (
             <label className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700" key={opt}>
               <input
                 type="checkbox"
@@ -220,9 +306,9 @@ export default function ProductsFilterSidebar({ data }) {
         </Section>
       )}
 
-      {Array.isArray(data?.waterTypeOptions) && data.waterTypeOptions.length > 0 && (
+      {dynamicWaterTypeOptions.length > 0 && (
         <Section title="Water Type" defaultOpen={false}>
-          {data.waterTypeOptions.map(opt => (
+          {dynamicWaterTypeOptions.map(opt => (
             <label className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700" key={opt}>
               <input
                 type="checkbox"

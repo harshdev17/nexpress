@@ -44,14 +44,14 @@ export default function Footer() {
 
   const footerLinksLeft = [
     { name: "Home", href: "/" },
-    { name: "My Account", href: "/account" },
-    { name: "About", href: "/about" },
-    { name: "Contact Us", href: "/contact" },
+    { name: "My Account", href: "/customer/account" },
+    { name: "About", href: "/about-us" },
+    { name: "Contact Us", href: "mailto:info@nexpressdelivery.co.uk" },
     { name: "Delivery Areas", href: "/delivery-areas" },
   ];
 
   const footerLinksRight = [
-    { name: "Sitemap", href: "/sitemap" },
+    { name: "Sitemap", href: "/" },
     { name: "FAQ", href: "/faq" },
     { name: "Cookie Policy", href: "/cookie-policy" },
     { name: "Terms & Conditions", href: "/terms-and-conditions" },
@@ -493,7 +493,7 @@ export default function Footer() {
             </div>
             <div>
               <Link
-                href="/account"
+              href="/customer/account"
                 className="flex flex-col items-center justify-center w-14 h-14 text-gray-600 hover:text-[#368899] transition-all duration-300"
               >
                 <svg

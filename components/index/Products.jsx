@@ -1,9 +1,13 @@
 "use client"
 import ProductCard from "../common/ProductCard";
+import NoSearchResults from "../common/NoSearchResults";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 export default function Products() {
-  const [activeTab, setActiveTab] = useState("featured");
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +24,7 @@ export default function Products() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
 
   const fetchProducts = async () => {
     try {
@@ -40,16 +45,25 @@ export default function Products() {
     }
   };
 
-  // Filter products based on active tab
+  // Filter products based on active tab and search query
   const getFilteredProducts = () => {
-    if (activeTab === "featured") {
-      return products.filter(product => product.Featured === 1);
-    } else if (activeTab === "hotDeals") {
-      // For hot deals, you can implement your own logic
-      // For now, showing products with lower stock or specific criteria
-      return products.filter(product => product.ItemStock < 50 && product.ItemStock > 0);
+    let filtered = products;
+
+    // Apply search filter if search query exists
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(product => 
+        (product.ItemName && product.ItemName.toLowerCase().includes(query)) ||
+        (product.ItemShortDesc && product.ItemShortDesc.toLowerCase().includes(query)) ||
+        (product.Brand && product.Brand.toLowerCase().includes(query)) ||
+        (product.Category && product.Category.toLowerCase().includes(query))
+      );
+    } else {
+      // Show only featured products when no search query
+      filtered = filtered.filter(product => product.Featured === 1);
     }
-    return products;
+
+    return filtered;
   };
 
   const filteredProducts = getFilteredProducts();
@@ -92,67 +106,48 @@ export default function Products() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Premium Collection
-          </div>
-          
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-gray-900 via-[#368899] to-[#2d7a8a] bg-clip-text text-transparent mb-4 md:mb-6">
-            Discover Amazing Products
-          </h1>
-          
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
-            Explore our carefully curated collection of premium products designed to enhance your lifestyle with quality and style.
-          </p>
-        </div>
-
-        {/* Enhanced Tabs */}
-        <div className="flex justify-center mb-12 md:mb-16 px-4">
-          <div className="inline-flex rounded-2xl bg-white/80 backdrop-blur-sm p-1 md:p-2 shadow-xl border border-gray-200 w-full max-w-md md:max-w-none md:w-auto">
-            <button
-              className={`px-4 md:px-8 py-3 md:py-4 text-xs md:text-sm font-semibold rounded-xl transition-all duration-500 flex-1 md:flex-none ${
-                activeTab === "featured"
-                  ? "bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white shadow-lg transform scale-105"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-              onClick={() => setActiveTab("featured")}
-            >
-              <div className="flex items-center gap-1 md:gap-2 justify-center">
-                <svg className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          {searchQuery ? (
+            <>
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span className="hidden sm:inline">Featured Products</span>
-                <span className="sm:hidden">Featured</span>
+                Search Results
               </div>
-            </button>
-            
-            <button
-              className={`px-4 md:px-8 py-3 md:py-4 text-xs md:text-sm font-semibold rounded-xl transition-all duration-500 flex-1 md:flex-none ${
-                activeTab === "hotDeals"
-                  ? "bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white shadow-lg transform scale-105"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-              onClick={() => setActiveTab("hotDeals")}
-            >
-              <div className="flex items-center gap-1 md:gap-2 justify-center">
-                <svg className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-gray-900 via-[#368899] to-[#2d7a8a] bg-clip-text text-transparent mb-4 md:mb-6">
+                Search Results for "{searchQuery}"
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
+                Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} matching your search.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span className="hidden sm:inline">Hot Deals</span>
-                <span className="sm:hidden">Deals</span>
+                Premium Collection
               </div>
-            </button>
-          </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-gray-900 via-[#368899] to-[#2d7a8a] bg-clip-text text-transparent mb-4 md:mb-6">
+                Discover Amazing Products
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
+                Explore our carefully curated collection of premium products designed to enhance your lifestyle with quality and style.
+              </p>
+            </>
+          )}
         </div>
+
 
         {/* Product Count Display */}
         <div className="text-center mb-8">
           <p className="text-gray-600">
-            Showing {filteredProducts.length} products
-            {activeTab === "featured" && " (Featured)"}
-            {activeTab === "hotDeals" && " (Hot Deals)"}
+            {searchQuery ? (
+              `Found ${filteredProducts.length} product${filteredProducts.length !== 1 ? 's' : ''} for "${searchQuery}"`
+            ) : (
+              `Showing ${filteredProducts.length} featured product${filteredProducts.length !== 1 ? 's' : ''}`
+            )}
           </p>
         </div>
 
@@ -184,15 +179,54 @@ export default function Products() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="text-gray-400 mb-4">
-              <svg className="h-16 w-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+          searchQuery ? (
+            <NoSearchResults searchQuery={searchQuery} />
+          ) : (
+            <div className="text-center py-16 px-4">
+              <div className="max-w-md mx-auto">
+                {/* Icon */}
+                <div className="mb-6">
+                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Message */}
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  No Products Available
+                </h3>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  No products are currently available in this category. Please check back later or explore other categories.
+                </p>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link 
+                    href="/products"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-[#368899] text-white font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                    </svg>
+                    Browse All Products
+                  </Link>
+                </div>
+                
+                {/* Helpful Tips */}
+                <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Helpful Tips:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1 text-left">
+                    <li>• Check other product categories</li>
+                    <li>• Try different filter combinations</li>
+                    <li>• Contact us for specific requests</li>
+                  </ul>
+                </div>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600">Try switching to a different category or check back later.</p>
-          </div>
+          )
         )}
 
         {/* Enhanced View More Button */}

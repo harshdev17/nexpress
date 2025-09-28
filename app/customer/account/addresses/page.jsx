@@ -217,27 +217,27 @@ export default function AddressesPage() {
   };
 
   return (
-    <main className="w-full bg-gray-50 min-h-screen">
+    <main className="w-full bg-gray-50 min-h-screen overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
                   Address Book
                 </h1>
-                <p className="text-lg text-gray-600 mt-1">Manage your delivery addresses and preferences</p>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1">Manage your delivery addresses and preferences</p>
               </div>
             </div>
             <Link
               href="/customer/account"
-              className="inline-flex items-center px-6 py-3 text-sm font-medium text-[#368899] bg-white border-2 border-[#368899] rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 text-sm font-medium text-[#368899] bg-white border-2 border-[#368899] rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-200 transform hover:scale-105 shadow-lg w-full sm:w-auto justify-center"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -253,17 +253,17 @@ export default function AddressesPage() {
         </div>
 
         {/* Addresses Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <div className="mb-8 flex items-center justify-between">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 lg:p-8">
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Addresses</h2>
-              <p className="text-gray-600">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Your Addresses</h2>
+              <p className="text-sm sm:text-base text-gray-600">
                 {loading ? 'Loading addresses...' : `You have ${addresses.length} saved addresses`}
               </p>
             </div>
             <button 
               onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center px-6 py-3 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg"
+              className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-[#368899] text-white font-medium rounded-xl hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg w-full sm:w-auto justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -352,41 +352,43 @@ export default function AddressesPage() {
                     {address.phone && <p>Phone: {address.phone}</p>}
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
                     <button 
                       onClick={() => handleEditAddress(address)}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                      className="inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
-                      Edit
+                      <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button 
                       onClick={() => handleDeleteAddress(address.id)}
-                      className="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                      className="inline-flex items-center justify-center px-3 py-2 bg-red-50 text-red-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200"
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                      Delete
+                      <span className="hidden sm:inline">Delete</span>
                     </button>
                     {!address.isDefault && (
                       <button 
                         onClick={() => handleSetDefault(address.id)}
-                        className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                        className="inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors border border-blue-200 col-span-2 sm:col-span-1"
                       >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
-                        Set as Default
+                        <span className="hidden sm:inline">Set as Default</span>
+                        <span className="sm:hidden">Set Default</span>
                       </button>
                     )}
-                    <button className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button className="inline-flex items-center justify-center px-3 py-2 bg-[#368899] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors col-span-2 sm:col-span-1">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
                       </svg>
-                      Use for Next Order
+                      <span className="hidden sm:inline">Use for Next Order</span>
+                      <span className="sm:hidden">Use Next</span>
                     </button>
                   </div>
                 </div>
@@ -396,14 +398,14 @@ export default function AddressesPage() {
 
           {/* Quick Actions */}
           {addresses.length > 0 && (
-            <div className="mt-12 p-6 bg-gray-100 rounded-2xl border border-gray-200">
-              <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-gray-100 rounded-2xl border border-gray-200">
+              <div className="flex flex-col space-y-4">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Quick Actions</h3>
-                  <p className="text-gray-600">Manage your addresses and delivery preferences</p>
+                  <p className="text-sm sm:text-base text-gray-600">Manage your addresses and delivery preferences</p>
                 </div>
-                <div className="flex items-center space-x-3 mt-4 md:mt-0">
-                  <button className="inline-flex items-center px-4 py-2 bg-white text-[#368899] text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-[#368899]">
+                <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                  <button className="inline-flex items-center px-4 py-2 bg-white text-[#368899] text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors border border-[#368899] w-full sm:w-auto justify-center">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -411,7 +413,7 @@ export default function AddressesPage() {
                   </button>
                   <button 
                     onClick={() => setShowAddForm(true)}
-                    className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors"
+                    className="inline-flex items-center px-4 py-2 bg-[#368899] text-white text-sm font-medium rounded-lg hover:bg-[#2d7a8a] transition-colors w-full sm:w-auto justify-center"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

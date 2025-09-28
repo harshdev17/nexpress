@@ -27,6 +27,15 @@ export default function Header() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [menuCategories, setMenuCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [mobileSearchSuggestions, setMobileSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showMobileSuggestions, setShowMobileSuggestions] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [selectedMobileSuggestionIndex, setSelectedMobileSuggestionIndex] = useState(-1);
 
   // Get cart totals
   const cartTotals = getCartTotals();
@@ -41,6 +50,102 @@ export default function Header() {
 
   const toggleCategoryDropdown = () => {
     setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
+  };
+
+  const handleSearch = (e, isMobile = false) => {
+    e.preventDefault();
+    const query = isMobile ? mobileSearchQuery : searchQuery;
+    if (query.trim()) {
+      router.push(`/products?search=${encodeURIComponent(query.trim())}`);
+      if (isMobile) {
+        setIsMobileMenuOpen(false);
+        setMobileSearchQuery('');
+      } else {
+        setSearchQuery('');
+      }
+    }
+  };
+
+  const handleSearchInputChange = (e, isMobile = false) => {
+    const value = e.target.value;
+    if (isMobile) {
+      setMobileSearchQuery(value);
+      updateSuggestions(value, true);
+    } else {
+      setSearchQuery(value);
+      updateSuggestions(value, false);
+    }
+  };
+
+  const updateSuggestions = (query, isMobile = false) => {
+    if (query.trim().length < 2) {
+      if (isMobile) {
+        setMobileSearchSuggestions([]);
+        setShowMobileSuggestions(false);
+      } else {
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
+      }
+      return;
+    }
+
+    const filtered = allProducts.filter(product => 
+      (product.ItemName && product.ItemName.toLowerCase().includes(query.toLowerCase())) ||
+      (product.Brand && product.Brand.toLowerCase().includes(query.toLowerCase())) ||
+      (product.Category && product.Category.toLowerCase().includes(query.toLowerCase()))
+    ).slice(0, 5); // Limit to 5 suggestions
+
+    if (isMobile) {
+      setMobileSearchSuggestions(filtered);
+      setShowMobileSuggestions(filtered.length > 0);
+    } else {
+      setSearchSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    }
+  };
+
+  const selectSuggestion = (product, isMobile = false) => {
+    const query = product.ItemName || product.Brand || product.Category;
+    if (isMobile) {
+      setMobileSearchQuery(query);
+      setShowMobileSuggestions(false);
+    } else {
+      setSearchQuery(query);
+      setShowSuggestions(false);
+    }
+  };
+
+  const clearSuggestions = (isMobile = false) => {
+    if (isMobile) {
+      setShowMobileSuggestions(false);
+      setSelectedMobileSuggestionIndex(-1);
+    } else {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }
+  };
+
+  const handleKeyDown = (e, isMobile = false) => {
+    const suggestions = isMobile ? mobileSearchSuggestions : searchSuggestions;
+    const selectedIndex = isMobile ? selectedMobileSuggestionIndex : selectedSuggestionIndex;
+    const setSelectedIndex = isMobile ? setSelectedMobileSuggestionIndex : setSelectedSuggestionIndex;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => 
+        prev > 0 ? prev - 1 : suggestions.length - 1
+      );
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      selectSuggestion(suggestions[selectedIndex], isMobile);
+    } else if (e.key === 'Escape') {
+      clearSuggestions(isMobile);
+    }
   };
 
   // Dropdown categories data
@@ -69,6 +174,21 @@ export default function Header() {
         }
       } catch {
         setMenuCategories([]);
+      }
+    })();
+  }, []);
+
+  // Fetch products for search suggestions
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/products', { cache: 'no-store' });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.products)) {
+          setAllProducts(data.products);
+        }
+      } catch {
+        setAllProducts([]);
       }
     })();
   }, []);
@@ -180,7 +300,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               ) : (
                 <Link href="/customer/login" className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Login</Link>
               )}
-              <Link href="/contact" className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Contact</Link>
+              <Link href="mailto:info@nexpressdelivery.co.uk" className="text-sm font-medium transition-all duration-300 hover:text-gray-200 hover:scale-105">Contact</Link>
               
               {/* Social Icons */}
               <div className="flex items-center space-x-3">
@@ -279,7 +399,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                 <p className="font-bold text-[#368899] uppercase text-sm tracking-wide">Home and Office Delivery</p>
                 <p className="text-sm text-gray-600">Reliable, <strong>fast</strong> 1-2 working day</p>
                 <p className="text-sm text-gray-600">delivery in most <strong>London</strong> areas.</p>
-                <Link href="/delivery-schedule" className="text-sm text-[#368899] underline transition-colors duration-300 hover:text-[#2d7a8a] hover:no-underline">
+                <Link href="/delivery-areas" className="text-sm text-[#368899] underline transition-colors duration-300 hover:text-[#2d7a8a] hover:no-underline">
                   Check our delivery schedule
                 </Link>
               </div>
@@ -353,7 +473,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               
               
               <Link href="/delivery-areas" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Delivery Areas</Link>
-              <Link href="/corporate-events" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Corporate/Events</Link>
+              <Link href="/events" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Corporate/Events</Link>
               <Link href="/about-us" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">About Us</Link>
               <Link href="/faq" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">FAQ's</Link>
             </nav>
@@ -361,12 +481,19 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
             {/* Centered Search Bar */}
             <div className="flex items-center justify-center w-full lg:w-auto">
               <div className="relative w-full max-w-md group">
+                <form onSubmit={(e) => handleSearch(e, false)} className="relative">
                 <input 
                   type="search" 
                   placeholder="Search products..." 
+                    value={searchQuery}
+                    onChange={(e) => handleSearchInputChange(e, false)}
+                    onFocus={() => setShowSuggestions(searchSuggestions.length > 0)}
+                    onBlur={() => setTimeout(() => clearSuggestions(false), 200)}
+                    onKeyDown={(e) => handleKeyDown(e, false)}
                   className="w-full border-2 border-gray-200 rounded-xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-all duration-300 group-hover:border-gray-300 group-hover:shadow-md"
                   aria-label="Search products"
                   id="search-input"
+                    autoComplete="off"
                 />
                 <button 
                   type="submit" 
@@ -377,6 +504,54 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                 </button>
                 {/* Search animation indicator */}
                 <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-[#368899]/20 transition-all duration-300 pointer-events-none"></div>
+                </form>
+
+                {/* Search Suggestions Dropdown */}
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto">
+                    <div className="p-2">
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2 border-b border-gray-100">
+                        Suggestions
+                      </div>
+                      {searchSuggestions.map((product, index) => (
+                        <button
+                          key={index}
+                          onClick={() => selectSuggestion(product, false)}
+                          className={`w-full text-left px-3 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-3 ${
+                            index === selectedSuggestionIndex 
+                              ? 'bg-[#368899]/10 border border-[#368899]/20' 
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            {product.ItemMainImage ? (
+                              <img 
+                                src={product.ItemMainImage} 
+                                alt={product.ItemName}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {product.ItemName}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">
+                              {product.Brand && `${product.Brand} • `}{product.Category}
+                            </div>
+                            <div className="text-sm font-bold text-[#368899]">
+                              £{parseFloat(product.ItemPrice || 0).toFixed(2)}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -419,10 +594,17 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               {/* Search Section */}
               <div className="p-4 border-b border-gray-200">
                 <div className="relative">
+                  <form onSubmit={(e) => handleSearch(e, true)} className="relative">
                   <input 
                     type="search" 
                     placeholder="Search products..." 
+                      value={mobileSearchQuery}
+                      onChange={(e) => handleSearchInputChange(e, true)}
+                      onFocus={() => setShowMobileSuggestions(mobileSearchSuggestions.length > 0)}
+                      onBlur={() => setTimeout(() => clearSuggestions(true), 200)}
+                      onKeyDown={(e) => handleKeyDown(e, true)}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#368899] focus:border-[#368899]"
+                      autoComplete="off"
                   />
                   <button 
                     type="submit" 
@@ -430,6 +612,54 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                   >
                     <SearchIcon className="w-4 h-4" />
                   </button>
+                  </form>
+
+                  {/* Mobile Search Suggestions Dropdown */}
+                  {showMobileSuggestions && mobileSearchSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-60 overflow-y-auto">
+                      <div className="p-2">
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2 border-b border-gray-100">
+                          Suggestions
+                        </div>
+                        {mobileSearchSuggestions.map((product, index) => (
+                          <button
+                            key={index}
+                            onClick={() => selectSuggestion(product, true)}
+                            className={`w-full text-left px-3 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-3 ${
+                              index === selectedMobileSuggestionIndex 
+                                ? 'bg-[#368899]/10 border border-[#368899]/20' 
+                                : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              {product.ItemMainImage ? (
+                                <img 
+                                  src={product.ItemMainImage} 
+                                  alt={product.ItemName}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-900 truncate">
+                                {product.ItemName}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate">
+                                {product.Brand && `${product.Brand} • `}{product.Category}
+                              </div>
+                              <div className="text-sm font-bold text-[#368899]">
+                                £{parseFloat(product.ItemPrice || 0).toFixed(2)}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -488,7 +718,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/about-us" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
@@ -502,7 +732,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/corporate-events" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/events" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -541,7 +771,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/contact" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="mailto:info@nexpressdelivery.co.uk" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <PhoneIcon className="w-5 h-5" />
                       <span className="font-medium">Contact Us</span>
                     </Link>

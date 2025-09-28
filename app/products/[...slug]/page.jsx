@@ -4,7 +4,9 @@ import ProductCard from '@/components/common/ProductCard';
 import ProductDetail from '@/components/common/ProductDetail';
 import ProductsFilterSidebar from '@/components/common/ProductsFilterSidebar';
 import ProductsToolbar from '@/components/common/ProductsToolbar';
+import NoProductsFound from '@/components/common/NoProductsFound';
 import { db, old_db } from '@/lib/db';
+import BrandLogo from '@/components/common/BrandLogo';
 
 async function runQuery(sql, params = []) {
   const pools = [old_db, db].filter(Boolean);
@@ -200,13 +202,72 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   const maxPrice = parseFloat(searchParams?.maxPrice) || 1000;
   const inStock = searchParams?.inStock === '1';
   const discounted = searchParams?.discounted === '1';
+  const packagingFilter = (searchParams?.packaging || '').split(',').filter(Boolean);
+  const waterTypeFilter = (searchParams?.waterTypes || '').split(',').filter(Boolean);
   
   let filteredProducts = products.filter(p => {
     const price = p.isOnSale && p.salePrice > 0 ? p.salePrice : p.ItemPrice;
     const priceMatch = price >= minPrice && price <= maxPrice;
     const stockMatch = !inStock || !p.IsSoldOut;
     const discountMatch = !discounted || (p.isOnSale && p.salePrice > 0);
-    return priceMatch && stockMatch && discountMatch;
+    
+    // Packaging filter
+    const packagingMatch = packagingFilter.length === 0 || packagingFilter.some(filter => {
+      const name = (p.ItemName || '').toLowerCase();
+      const description = (p.ItemShortDesc || '').toLowerCase();
+      
+      if (filter === 'Glass') {
+        return name.includes('glass') || description.includes('glass') || 
+               (name.includes('bottle') && (name.includes('glass') || description.includes('glass'))) ||
+               name.includes('jar') || description.includes('jar') ||
+               name.includes('vial') || description.includes('vial');
+      }
+      if (filter === 'Plastic') {
+        return name.includes('plastic') || description.includes('plastic') || 
+               (name.includes('bottle') && (name.includes('plastic') || description.includes('plastic'))) ||
+               name.includes('pet') || description.includes('pet') ||
+               name.includes('pvc') || description.includes('pvc') ||
+               (name.includes('container') && (name.includes('plastic') || description.includes('plastic')));
+      }
+      if (filter === 'Carton/Can') {
+        return name.includes('carton') || description.includes('carton') || 
+               name.includes('can') || description.includes('can') ||
+               name.includes('tin') || description.includes('tin') ||
+               name.includes('aluminum') || description.includes('aluminum') ||
+               name.includes('aluminium') || description.includes('aluminium') ||
+               name.includes('tetra') || description.includes('tetra') ||
+               (name.includes('box') && (name.includes('carton') || description.includes('carton')));
+      }
+      return false;
+    });
+    
+    // Water type filter
+    const waterTypeMatch = waterTypeFilter.length === 0 || waterTypeFilter.some(filter => {
+      const name = (p.ItemName || '').toLowerCase();
+      const description = (p.ItemShortDesc || '').toLowerCase();
+      
+      if (filter === 'Still') {
+        return name.includes('still') || description.includes('still') ||
+               name.includes('natural') || description.includes('natural') ||
+               name.includes('spring') || description.includes('spring') ||
+               name.includes('mineral') || description.includes('mineral') ||
+               name.includes('purified') || description.includes('purified') ||
+               name.includes('distilled') || description.includes('distilled') ||
+               name.includes('filtered') || description.includes('filtered');
+      }
+      if (filter === 'Sparkling') {
+        return name.includes('sparkling') || description.includes('sparkling') ||
+               name.includes('carbonated') || description.includes('carbonated') ||
+               name.includes('fizzy') || description.includes('fizzy') ||
+               name.includes('bubbly') || description.includes('bubbly') ||
+               name.includes('soda') || description.includes('soda') ||
+               name.includes('effervescent') || description.includes('effervescent') ||
+               name.includes('bubbles') || description.includes('bubbles');
+      }
+      return false;
+    });
+    
+    return priceMatch && stockMatch && discountMatch && packagingMatch && waterTypeMatch;
   });
 
   // Apply sorting based on query
@@ -248,6 +309,7 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   console.log("Discounted products:", discountedProducts.length);
   console.log("Price range:", priceRange);
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 py-8">
       <nav className="text-sm text-gray-500 mb-4">
         <Link href="/">Home</Link> / <Link href={`/categories/${encodeURIComponent(category.PageName)}`} className="text-[#368899]">{category.CatName}</Link>
@@ -260,16 +322,17 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
               categories: mainCats.map(c => ({ id: c.id, name: c.CatName, slug: slugify(c.PageName, c.CatName), hasChildren: Number(c.ChildCount) > 0 })),
               subCategories: subCats.map(c => ({ id: c.id, name: c.CatName, slug: slugify(c.PageName, c.CatName) })),
               countries: [],
-              packagingOptions: ["Glass", "Plastic", "Carton/Can"],
-              waterTypeOptions: ["Still", "Sparkling"],
+              packagingOptions: [], // Will be dynamically generated
+              waterTypeOptions: [], // Will be dynamically generated
               price: priceRange,
             }}
+            products={products}
           />
         </div>
         <div className="lg:col-span-9">
           <ProductsToolbar />
           {visibleProducts.length === 0 ? (
-            <p>No products found.</p>
+            <NoProductsFound type="filter" />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
               {visibleProducts.map(p => (
@@ -294,7 +357,11 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
           )}
         </div>
       </div>
+
+    
     </div>
+      <BrandLogo />
+      </>
   );
 }
 

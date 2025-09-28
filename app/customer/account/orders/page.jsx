@@ -112,27 +112,27 @@ export default function OrdersPage() {
   );
 
   return (
-    <main className="w-full bg-gray-50 min-h-screen">
+    <main className="w-full bg-gray-50 min-h-screen overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
                   My Orders
                 </h1>
-                <p className="text-lg text-gray-600 mt-1">Track your orders and view order history</p>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1">Track your orders and view order history</p>
               </div>
             </div>
             <Link
               href="/customer/account"
-              className="inline-flex items-center px-6 py-3 text-sm font-medium text-[#368899] bg-white border-2 border-[#368899] rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 text-sm font-medium text-[#368899] bg-white border-2 border-[#368899] rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-200 transform hover:scale-105 shadow-lg w-full sm:w-auto justify-center"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -148,16 +148,16 @@ export default function OrdersPage() {
         </div>
 
         {/* Orders Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 lg:p-8">
+          <div className="mb-6 sm:mb-8 flex flex-col space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Order History</h2>
-              <p className="text-gray-600">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Order History</h2>
+              <p className="text-sm sm:text-base text-gray-600">
                 {loading ? 'Loading orders...' : `You have ${orders.length} orders in total`}
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg border border-gray-200 text-center sm:text-left">
                 <span className="text-sm font-medium">Total Spent: £{totalSpent}</span>
               </div>
               <input
@@ -165,7 +165,7 @@ export default function OrdersPage() {
                 placeholder="Search orders..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors text-sm bg-white"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors text-sm bg-white w-full sm:w-auto"
               />
             </div>
           </div>
@@ -224,36 +224,38 @@ export default function OrdersPage() {
             <div className="space-y-6">
               {filteredOrders.map((order) => (
                 <div key={order.id} className="border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-                    <div className="flex items-center space-x-4 mb-4 lg:mb-0">
-                      <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-xl text-sm font-bold">
-                        {order.OrderNumber || `#${order.id}`}
+                  <div className="flex flex-col space-y-4 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                        <div className="bg-gray-200 text-gray-800 px-3 py-2 rounded-xl text-sm font-bold">
+                          {order.OrderNumber || `#${order.id}`}
+                        </div>
+                        <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-lg">
+                          {new Date(order.OrderDateTime || order.CreatedDateTime).toLocaleDateString('en-GB', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-lg">
-                        {new Date(order.OrderDateTime || order.CreatedDateTime).toLocaleDateString('en-GB', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
+                      <div className="text-right">
+                        <span className="text-sm text-gray-600">Total</span>
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">£{parseFloat(order.TotalAmount || 0).toFixed(2)}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex justify-center sm:justify-start">
                       <span className={`px-4 py-2 rounded-xl text-sm font-medium border ${getStatusColor(order.OrderStatus)} flex items-center space-x-2`}>
                         {getStatusIcon(order.OrderStatus)}
                         <span>{order.OrderStatus || 'Unknown'}</span>
                       </span>
-                      <div className="text-right">
-                        <span className="text-sm text-gray-600">Total</span>
-                        <p className="text-2xl font-bold text-gray-900">£{parseFloat(order.TotalAmount || 0).toFixed(2)}</p>
-                      </div>
                     </div>
                   </div>
 
                   <div className="space-y-3 mb-6">
                     {order.items?.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 px-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors space-y-2 sm:space-y-0">
                         <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                             {item.image ? (
                               <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
                             ) : (
@@ -262,17 +264,17 @@ export default function OrdersPage() {
                               </svg>
                             )}
                           </div>
-                          <div>
-                            <span className="text-gray-900 font-medium">{item.productName}</span>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-gray-500 text-sm">Qty: {item.quantity}</span>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-gray-600 font-medium">£{item.unitPrice.toFixed(2)}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-gray-900 font-medium text-sm sm:text-base break-words">{item.productName}</span>
+                            <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mt-1">
+                              <span className="text-gray-500 text-xs sm:text-sm">Qty: {item.quantity}</span>
+                              <span className="text-gray-400 hidden sm:inline">•</span>
+                              <span className="text-gray-600 font-medium text-xs sm:text-sm">£{item.unitPrice.toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-lg font-bold text-gray-900">
+                        <div className="text-right sm:text-right">
+                          <span className="text-base sm:text-lg font-bold text-gray-900">
                             £{item.totalPrice.toFixed(2)}
                           </span>
                         </div>

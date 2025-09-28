@@ -73,7 +73,7 @@ export default function AccountPage() {
   const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.TotalAmount || 0), 0);
   const totalAddresses = addresses.length;
   return (
-    <main className="w-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
+    <main className="w-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -84,7 +84,7 @@ export default function AccountPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                   Welcome back{profile ? `, ${profile.firstName || profile.username || 'User'}!` : '!'}
                 </h1>
                 <p className="text-lg text-gray-600 mt-1">Manage your account, orders, and preferences</p>
@@ -98,7 +98,7 @@ export default function AccountPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Stats */}
           <div className="lg:col-span-2 space-y-6">
             {/* Stats Cards */}
@@ -193,8 +193,8 @@ export default function AccountPage() {
                   </div>
                 ) : (
                   orders.slice(0, 3).map((order) => (
-                    <div key={order.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-3 sm:mb-0">
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
@@ -208,7 +208,7 @@ export default function AccountPage() {
                           }
                         </p>
                       </div>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 mt-2 sm:mt-0">
                         {new Date(order.OrderDate || order.CreatedDateTime).toLocaleDateString()}
                       </span>
                     </div>
@@ -362,7 +362,7 @@ export default function AccountPage() {
                 Our customer support team is here to help you with any questions or issues.
               </p>
               <Link
-                href="/contact"
+                href="mailto:info@nexpressdelivery.co.uk"
                 className="inline-flex items-center bg-white text-[#368899] px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
               >
                 Contact Support
