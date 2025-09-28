@@ -1,62 +1,11 @@
+"use client";
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
-
-export const metadata = {
-  title: "My Favourites | Nexpress Delivery",
-  description: "View and manage your favourite products.",
-};
+import ProductCard from "@/components/common/ProductCard";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 export default function FavouritesPage() {
-  const favourites = [
-    {
-      id: 1,
-      name: "Heineken Lager 330ml",
-      price: "£2.99",
-      category: "Lager",
-      stock: "In Stock",
-      image: "/product-placeholder.jpg"
-    },
-    {
-      id: 2,
-      name: "Corona Extra 330ml",
-      price: "£3.49",
-      category: "Lager",
-      stock: "In Stock",
-      image: "/product-placeholder.jpg"
-    },
-    {
-      id: 3,
-      name: "Stella Artois 330ml",
-      price: "£2.99",
-      category: "Lager",
-      stock: "Low Stock",
-      image: "/product-placeholder.jpg"
-    },
-    {
-      id: 4,
-      name: "Budweiser 330ml",
-      price: "£2.50",
-      category: "Lager",
-      stock: "In Stock",
-      image: "/product-placeholder.jpg"
-    },
-    {
-      id: 5,
-      name: "Peroni Nastro Azzurro 330ml",
-      price: "£1.75",
-      category: "Lager",
-      stock: "In Stock",
-      image: "/product-placeholder.jpg"
-    },
-    {
-      id: 6,
-      name: "Guinness Draught 440ml",
-      price: "£2.25",
-      category: "Stout",
-      stock: "Out of Stock",
-      image: "/product-placeholder.jpg"
-    }
-  ];
+  const { wishlist, clearWishlist, getWishlistCount } = useWishlist();
 
   const getStockColor = (stock) => {
     switch (stock) {
@@ -112,17 +61,22 @@ export default function FavouritesPage() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Favourite Products</h2>
-              <p className="text-gray-600">You have {favourites.length} items in your favourites</p>
+              <p className="text-gray-600">You have {getWishlistCount()} items in your favourites</p>
             </div>
-            <button className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors border border-red-200">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Clear All
-            </button>
+            {wishlist.length > 0 && (
+              <button 
+                onClick={clearWishlist}
+                className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors border border-red-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Clear All
+              </button>
+            )}
           </div>
 
-          {favourites.length === 0 ? (
+          {wishlist.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
                 <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,58 +98,30 @@ export default function FavouritesPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {favourites.map((item) => (
-                <div key={item.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-                  {/* Product Image Placeholder */}
-                  <div className="w-full h-48 bg-gray-100 rounded-xl mb-4 flex items-center justify-center">
-                    <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="mb-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-[#368899] transition-colors">
-                        {item.name}
-                      </h3>
-                      <button className="text-red-500 hover:text-red-700 transition-colors p-1">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-2xl font-bold text-[#368899]">{item.price}</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStockColor(item.stock)}`}>
-                        {item.stock}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Category: {item.category}</p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
-                    <button className="w-full bg-[#368899] text-white py-3 px-4 rounded-xl font-medium hover:bg-[#2d7a8a] transition-all duration-200 shadow-lg">
-                      Add to Cart
-                    </button>
-                    <div className="flex space-x-2">
-                      <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                        View Details
-                      </button>
-                      <button className="flex-1 bg-red-50 text-red-600 py-2 px-3 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors border border-red-200">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {wishlist.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  title={product.ItemName || product.name}
+                  description={product.ItemShortDesc || product.description || 'Product description'}
+                  originalPrice={`£${parseFloat(product.ItemPrice || product.price || 0).toFixed(2)}`}
+                  discountedPrice={`£${parseFloat(product.ItemPrice || product.price || 0).toFixed(2)}`}
+                  isOnSale={product.ItemIsOnSale || false}
+                  salePrice={product.ItemSalePrice || 0}
+                  imageSrc={product.ItemMainImage || product.image || '/products/1.jpg'}
+                  brand={product.Brand || product.brand}
+                  isSoldOut={false}
+                  category={product.Category || product.category}
+                  href={`/products/${encodeURIComponent(product.PageName || product.slug || 'product')}`}
+                  product={product}
+                />
               ))}
             </div>
           )}
 
           {/* Quick Actions */}
-          {favourites.length > 0 && (
+          {wishlist.length > 0 && (
             <div className="mt-12 p-6 bg-gray-100 rounded-2xl border border-gray-200">
               <div className="flex flex-col md:flex-row items-center justify-between">
                 <div>

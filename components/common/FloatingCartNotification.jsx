@@ -18,16 +18,15 @@ export default function FloatingCartNotification() {
     
     if (currentItemCount > lastItemCount) {
       // Items were added - show notification
-      const addedCount = currentItemCount - lastItemCount;
       setMessage(`${currentItemCount} ${currentItemCount === 1 ? 'item' : 'items'} in cart`);
       setAnimationClass('animate-slide-in-right');
       setIsVisible(true);
       setIsManuallyClosed(false); // Reset manual close state
     } else if (currentItemCount < lastItemCount) {
-      // Items were removed - update notification if visible
+      // Items were removed - update notification if visible and not manually closed
       if (isVisible && !isManuallyClosed) {
         setMessage(`${currentItemCount} ${currentItemCount === 1 ? 'item' : 'items'} in cart`);
-        // No animation on update, just update the content
+        // No animation on update, just update the content silently
       }
     }
     
@@ -100,21 +99,21 @@ export default function FloatingCartNotification() {
       `}</style>
       
       <div className={`fixed bottom-6 right-6 z-50 ${animationClass}`}>
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-[400px] backdrop-blur-sm bg-white/95">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
+        <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-2xl p-6 w-[420px] backdrop-blur-sm bg-white/98">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start gap-4 flex-1">
               {/* Cart Icon with bounce animation */}
-              <div className="w-14 h-14 bg-gradient-to-br from-[#368899] to-[#2d7a8a] rounded-full flex items-center justify-center animate-bounce shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#368899] to-[#2d7a8a] rounded-full flex items-center justify-center animate-bounce shadow-lg flex-shrink-0">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               
               {/* Message Content */}
-              <div className="flex-1">
-                <p className="text-lg font-bold text-gray-900 mb-1">{message}</p>
-                <p className="text-base font-semibold text-gray-700">Total: £{totals.total.toFixed(2)}</p>
-                <div className="flex items-center gap-2 mt-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-xl font-bold text-gray-900 mb-2">{message}</p>
+                <p className="text-lg font-semibold text-[#368899] mb-3">Total: £{totals.total.toFixed(2)}</p>
+                <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-sm text-green-600 font-medium">Added successfully</span>
                 </div>
@@ -124,18 +123,18 @@ export default function FloatingCartNotification() {
             {/* Close Button */}
             <button 
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100 flex-shrink-0 ml-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           
           {/* View Cart Button */}
-          <div className="mb-4">
+          <div>
             <Link href="/cart">
-              <button className="w-full bg-gradient-to-r from-[#368899] to-[#2d7a8a] hover:from-[#2d7a8a] hover:to-[#1e5b67] text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+              <button className="w-full bg-gradient-to-r from-[#368899] to-[#2d7a8a] hover:from-[#2d7a8a] hover:to-[#1e5b67] text-white font-semibold px-6 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg text-lg">
                 View Cart
               </button>
             </Link>

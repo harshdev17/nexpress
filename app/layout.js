@@ -3,6 +3,7 @@ import Header from "@/components/common/Header";
 import "./globals.css";
 import Footer from "@/components/common/Footer";
 import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import FloatingCartNotification from "@/components/common/FloatingCartNotification";
 
 export const metadata = {
@@ -15,10 +16,12 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <CartProvider>
-          <Header />
-          {children}
-          <Footer />
-          <FloatingCartNotification />
+          <WishlistProvider>
+            <Header />
+            {children}
+            <Footer />
+            <FloatingCartNotification />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

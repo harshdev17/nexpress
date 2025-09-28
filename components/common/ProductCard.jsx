@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 export default function ProductCard({ 
   id,
@@ -22,6 +23,7 @@ export default function ProductCard({
 }) {
   const [imageError, setImageError] = useState(false);
   const { addToCart, removeFromCart, updateQuantity, items } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   
   // Check if product is in cart
   const cartItem = items.find(item => item.id === id);
@@ -87,8 +89,20 @@ export default function ProductCard({
     }
   };
 
+  const handleWishlistToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product) {
+      if (isInWishlist(id)) {
+        removeFromWishlist(id);
+      } else {
+        addToWishlist(product);
+      }
+    }
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-3 md:p-5 w-full mx-auto group relative h-[400px]">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col p-3 md:p-5 w-full mx-auto group relative h-[400px] mb-4">
       {/* Discount Badge - Show if there's a discount or if discountPercentage is provided */}
       {(discountPercent || discountPercentage) && (
         <div className="absolute top-2 right-2 z-10">
@@ -97,15 +111,6 @@ export default function ProductCard({
           </div>
         </div>
       )}
-
-      {/* Out of Stock Badge */}
-      {/* {isSoldOut && (
-        <div className="absolute top-0 left-0 z-10">
-          <div className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-lg">
-            OUT OF STOCK
-          </div>
-        </div>
-      )} */}
 
       {/* Product Image */}
       <div className="w-full flex justify-center mb-3 md:mb-4">
@@ -147,12 +152,13 @@ export default function ProductCard({
             {brand}
           </span>
         </div>
-      ) : 
-      <div className="text-center mb-2">
+      ) : (
+        <div className="text-center mb-2">
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-           {"Featured"}
+            Featured
           </span>
-        </div> }
+        </div>
+      )}
 
       {/* Title */}
       {href ? (
@@ -227,7 +233,7 @@ export default function ProductCard({
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              {isSoldOut ? 'OUT OF STOCK' : 'ADD TO CART'}
+              {isSoldOut ? 'OUT OF STOCK' : 'ADD'}
             </button>
           )}
         </div>
@@ -235,11 +241,14 @@ export default function ProductCard({
 
       {/* Wishlist and Share Buttons */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-        <button className="flex items-center gap-1 text-gray-500 hover:text-[#368899] transition-colors duration-300 text-xs">
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button 
+          onClick={handleWishlistToggle}
+          className="flex items-center gap-1 text-gray-500 hover:text-[#368899] transition-colors duration-300 text-xs"
+        >
+          <svg className="h-4 w-4" fill={isInWishlist(id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a2 2 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <span>Wishlist</span>
+          <span>{isInWishlist(id) ? 'In Wishlist' : 'Wishlist'}</span>
         </button>
         
         <button className="flex items-center gap-1 text-gray-500 hover:text-[#368899] transition-colors duration-300 text-xs">

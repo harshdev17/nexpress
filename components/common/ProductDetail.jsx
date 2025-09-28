@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import ProductCard from './ProductCard';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 export default function ProductDetail({ 
   product, 
@@ -14,6 +15,7 @@ export default function ProductDetail({
   const [imageError, setImageError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const { addToCart, removeFromCart, updateQuantity, items } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   
   // Check if product is in cart
   const cartItem = items.find(item => item.id === product.id);
@@ -97,6 +99,14 @@ export default function ProductDetail({
       removeFromCart(product.id);
     }
   };
+
+  const handleWishlistToggle = () => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
   
   const baseUrlImg = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8010').replace(/\/+$/, '');
   const imgSrc = /^https?:\/\//i.test(product.ItemMainImage || '')
@@ -157,28 +167,35 @@ export default function ProductDetail({
             {product.ItemName}
           </h1>
 
-          {/* Pricing */}
-          <div className="mb-8">
-            <div className="flex items-baseline gap-4 mb-2">
-              <span className="text-4xl font-bold text-gray-900">
-                £{vatPrice.toFixed(2)}
-              </span>
-              <span className="text-xl font-semibold text-gray-600">
-                (inc 20% VAT)
-              </span>
-            </div>
-            <div className="text-lg text-gray-500 font-medium">
-              £{exVatPrice.toFixed(2)} (ex VAT)
-            </div>
-            {onSale && (
-              <div className="flex items-center gap-3 mt-3">
-                <span className="text-2xl font-bold text-[#368899]">£{sale.toFixed(2)}</span>
-                <span className="text-lg text-gray-400 line-through">£{original.toFixed(2)}</span>
-                <span className="bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full">
-                  SALE
+          {/* Pricing Section - Redesigned */}
+          <div className="bg-gray-50 rounded-xl p-6 mb-8 border border-gray-200">
+            <div className="space-y-3">
+              {/* Main Price Display */}
+              <div className="flex items-baseline gap-3">
+                <span className="text-4xl font-bold text-gray-900">
+                  £{vatPrice.toFixed(2)}
+                </span>
+                <span className="text-lg text-gray-500 font-medium">
+                  (incl. VAT)
                 </span>
               </div>
-            )}
+              
+              {/* Ex-VAT Price */}
+              <div className="text-lg text-gray-500 font-medium">
+                £{exVatPrice.toFixed(2)} ex VAT
+              </div>
+              
+              {/* Sale Price Display */}
+              {onSale && (
+                <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+                  <span className="text-2xl font-bold text-[#368899]">£{sale.toFixed(2)}</span>
+                  <span className="text-lg text-gray-400 line-through">£{original.toFixed(2)}</span>
+                  <span className="bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full">
+                    SALE
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Short Description */}
@@ -189,63 +206,74 @@ export default function ProductDetail({
             </p>
           </div>
 
-          {/* Cart Controls */}
+          {/* Cart Controls - Redesigned */}
           <div className="space-y-6">
             {isInCart ? (
               // Quantity controls when item is in cart
-              <div className="flex items-center gap-6">
-                <span className="text-sm font-medium text-gray-700">Quantity in Cart:</span>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleDecreaseQuantity}
-                    className="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex items-center justify-center transition-colors shadow-sm"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <div className="w-16 h-12 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center">
-                    <span className="text-xl font-bold text-gray-900">
-                      {cartQuantity}
-                    </span>
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold text-gray-700">Quantity in Cart:</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleDecreaseQuantity}
+                        className="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex items-center justify-center transition-colors shadow-sm border border-gray-300"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <div className="w-16 h-12 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center">
+                        <span className="text-xl font-bold text-gray-900">
+                          {cartQuantity}
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleIncreaseQuantity}
+                        className="w-12 h-12 bg-[#368899] hover:bg-[#2d7a8a] text-white rounded-xl flex items-center justify-center transition-colors shadow-lg"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={handleIncreaseQuantity}
-                    className="w-12 h-12 bg-[#368899] hover:bg-[#2d7a8a] text-white rounded-xl flex items-center justify-center transition-colors shadow-lg"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </button>
+                  <Link href="/cart">
+                    <button className="bg-[#368899] hover:bg-[#2d7a8a] text-white px-6 py-3 rounded-xl font-semibold transition-colors shadow-lg">
+                      View Cart
+                    </button>
+                  </Link>
                 </div>
-                <Link href="/cart">
-                  <button className="text-[#368899] hover:text-[#2d7a8a] underline font-medium transition-colors">
-                    View Cart
-                  </button>
-                </Link>
               </div>
             ) : (
               // Add to cart when item is not in cart
-              <button 
-                onClick={handleAddToCart}
-                className="w-full flex items-center justify-center gap-3 bg-[#368899] text-white px-8 py-4 rounded-xl hover:bg-[#2d7a8a] transition-colors font-semibold text-lg shadow-lg"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                ADD TO CART
-              </button>
+              <div className="space-y-4">
+                <button 
+                  onClick={handleAddToCart}
+                  className="w-full flex items-center justify-center gap-3 bg-[#368899] text-white px-8 py-4 rounded-xl hover:bg-[#2d7a8a] transition-colors font-semibold text-lg shadow-lg"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  ADD TO CART
+                </button>
+                
+                {/* Wishlist Button */}
+                <button 
+                  onClick={handleWishlistToggle}
+                  className={`w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl transition-colors font-medium ${
+                    isInWishlist(product.id)
+                      ? 'bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100'
+                      : 'border-2 border-gray-300 text-gray-600 hover:border-[#368899] hover:text-[#368899]'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill={isInWishlist(product.id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a2 2 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  {isInWishlist(product.id) ? 'REMOVE FROM WISHLIST' : 'ADD TO WISHLIST'}
+                </button>
+              </div>
             )}
-            
-            {/* Wishlist Button */}
-            <div className="pt-4 border-t border-gray-200">
-              <button className="w-full flex items-center justify-center gap-3 border-2 border-gray-300 text-gray-600 px-6 py-3 rounded-xl hover:border-[#368899] hover:text-[#368899] transition-colors font-medium">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a2 2 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                ADD TO WISHLIST
-              </button>
-            </div>
           </div>
         </div>
       </div>

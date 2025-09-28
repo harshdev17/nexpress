@@ -22,7 +22,10 @@ export async function GET(request) {
     // Get user profile from customers table
     const [users] = await old_db.promise().query(`
       SELECT id, Username, Forename, Surname, Email, Company, 
-             Tel, MobileTel, UserType, CustomerGroupID, CreatedDateTime
+             Tel, MobileTel, UserType, CustomerGroupID, CreatedDateTime,
+             CustomerReference, FileAsName, Fax, TaxReference, TaxStatus,
+             IsSpecialCustomer, DefaultDeliveryAddressID, DefaultBillingAddressID,
+             Active, Notes
       FROM customers 
       WHERE id = ? AND Deleted = 0
     `, [user.userId]);
@@ -48,8 +51,18 @@ export async function GET(request) {
         company: userProfile.Company,
         telephone: userProfile.Tel,
         mobile: userProfile.MobileTel,
+        fax: userProfile.Fax,
         type: userProfile.UserType,
         customerGroup: userProfile.CustomerGroupID,
+        customerReference: userProfile.CustomerReference,
+        fileAsName: userProfile.FileAsName,
+        taxReference: userProfile.TaxReference,
+        taxStatus: userProfile.TaxStatus,
+        isSpecialCustomer: userProfile.IsSpecialCustomer,
+        defaultDeliveryAddressID: userProfile.DefaultDeliveryAddressID,
+        defaultBillingAddressID: userProfile.DefaultBillingAddressID,
+        active: userProfile.Active,
+        notes: userProfile.Notes,
         joiningDate: userProfile.CreatedDateTime
       }
     });
@@ -82,14 +95,22 @@ export async function PUT(request) {
     logRequest(request, null, user);
 
     // Update user profile in customers table
-    const { firstName, lastName, company, telephone, mobile } = body;
+    const { 
+      firstName, lastName, company, telephone, mobile, fax, 
+      customerReference, fileAsName, taxReference, taxStatus, notes 
+    } = body;
 
     await old_db.promise().query(`
       UPDATE customers 
       SET Forename = ?, Surname = ?, Company = ?, Tel = ?, MobileTel = ?,
-          ModifiedDateTime = NOW()
+          Fax = ?, CustomerReference = ?, FileAsName = ?, TaxReference = ?, 
+          TaxStatus = ?, Notes = ?, ModifiedDateTime = NOW()
       WHERE id = ? AND Deleted = 0
-    `, [firstName, lastName, company, telephone, mobile, user.userId]);
+    `, [
+      firstName, lastName, company, telephone, mobile, fax,
+      customerReference, fileAsName, taxReference, taxStatus, notes,
+      user.userId
+    ]);
 
     return NextResponse.json({
       success: true,

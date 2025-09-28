@@ -85,7 +85,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  Welcome back{profile ? `, ${profile.Forename || profile.Username || 'User'}!` : '!'}
+                  Welcome back{profile ? `, ${profile.firstName || profile.username || 'User'}!` : '!'}
                 </h1>
                 <p className="text-lg text-gray-600 mt-1">Manage your account, orders, and preferences</p>
               </div>
@@ -220,6 +220,100 @@ export default function AccountPage() {
 
           {/* Right Sidebar */}
           <div className="space-y-6">
+            {/* Profile Information */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Profile Information</h3>
+              {loading ? (
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ) : profile ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Name:</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {profile.firstName} {profile.lastName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Email:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Company:</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {profile.company || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Telephone:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.telephone || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Mobile:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.mobile || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Fax:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.fax || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">User Type:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Tax Status:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.taxStatus}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Tax Reference:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.taxReference || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Customer Ref:</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {profile.customerReference || 'Not set'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">File As:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.fileAsName || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Customer Group:</span>
+                    <span className="text-sm font-medium text-gray-900">{profile.customerGroup ?? '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Joined:</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {profile.joiningDate ? new Date(profile.joiningDate).toLocaleDateString('en-GB') : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Account Status:</span>
+                    <span className={`text-sm font-medium ${profile.active ? 'text-green-600' : 'text-red-600'}`}>
+                      {profile.active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">Failed to load profile information</p>
+              )}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <Link
+                  href="/customer/account/edit"
+                  className="inline-flex items-center text-sm text-[#368899] hover:text-[#2d7a8a] font-medium"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Edit Profile
+                </Link>
+              </div>
+            </div>
+
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>

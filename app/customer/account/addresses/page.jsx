@@ -8,6 +8,20 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [formData, setFormData] = useState({
+    type: 'Delivery',
+    name: '',
+    company: '',
+    address1: '',
+    address2: '',
+    city: '',
+    postcode: '',
+    country: 'United Kingdom',
+    state: '',
+    phone: ''
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchAddresses();
@@ -108,6 +122,97 @@ export default function AddressesPage() {
     } catch (err) {
       console.error('Error setting default address:', err);
       alert('Failed to set default address');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      type: 'Delivery',
+      name: '',
+      company: '',
+      address1: '',
+      address2: '',
+      city: '',
+      postcode: '',
+      country: 'United Kingdom',
+      state: '',
+      phone: ''
+    });
+    setEditingAddress(null);
+  };
+
+  const handleEditAddress = (address) => {
+    setFormData({
+      type: address.type,
+      name: address.name,
+      company: address.company,
+      address1: address.address1,
+      address2: address.address2,
+      city: address.city,
+      postcode: address.postcode,
+      country: address.country,
+      state: address.state,
+      phone: address.phone
+    });
+    setEditingAddress(address);
+    setShowAddForm(true);
+  };
+
+  const handleSubmitAddress = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.address1.trim() || !formData.city.trim() || !formData.postcode.trim()) {
+      alert('Please fill in all required fields (Name, Address Line 1, City, Postcode)');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No session token found. Please login again.');
+        return;
+      }
+
+      const url = editingAddress ? '/api/protected/addresses' : '/api/protected/addresses';
+      const method = editingAddress ? 'PUT' : 'POST';
+      
+      const requestBody = editingAddress 
+        ? { addressId: editingAddress.id, ...formData }
+        : formData;
+
+      const response = await fetch(url, {
+        method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (response.ok) {
+        await fetchAddresses(); // Refresh the list
+        setShowAddForm(false);
+        resetForm();
+        alert(editingAddress ? 'Address updated successfully!' : 'Address added successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to save address');
+      }
+    } catch (err) {
+      console.error('Error saving address:', err);
+      alert('Failed to save address');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -244,11 +349,14 @@ export default function AddressesPage() {
                     {address.address2 && <p>{address.address2}</p>}
                     <p>{address.city}, {address.postcode}</p>
                     <p>{address.state}, {address.country}</p>
-                    <p>Phone: {address.phone}</p>
+                    {address.phone && <p>Phone: {address.phone}</p>}
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <button className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                    <button 
+                      onClick={() => handleEditAddress(address)}
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
@@ -315,6 +423,232 @@ export default function AddressesPage() {
             </div>
           )}
         </div>
+
+        {/* Add/Edit Address Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {editingAddress ? 'Edit Address' : 'Add New Address'}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowAddForm(false);
+                      resetForm();
+                    }}
+                    className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmitAddress} className="p-6 space-y-6">
+                {/* Address Type */}
+                <div>
+                  <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+                    Address Type *
+                  </label>
+                  <select
+                    id="type"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                  >
+                    <option value="Delivery">Delivery</option>
+                    <option value="Billing">Billing</option>
+                    <option value="Billing+Delivery">Billing + Delivery</option>
+                  </select>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                {/* Company */}
+                <div>
+                  <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                    Company
+                  </label>
+                  <input
+                    type="text"
+                    id="company"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                    placeholder="Company name (optional)"
+                  />
+                </div>
+
+                {/* Address Lines */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="address1" className="block text-sm font-medium text-gray-700 mb-2">
+                      Address Line 1 *
+                    </label>
+                    <input
+                      type="text"
+                      id="address1"
+                      name="address1"
+                      value={formData.address1}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      placeholder="Street address"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="address2" className="block text-sm font-medium text-gray-700 mb-2">
+                      Address Line 2
+                    </label>
+                    <input
+                      type="text"
+                      id="address2"
+                      name="address2"
+                      value={formData.address2}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      placeholder="Apartment, suite, etc. (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* City, Postcode */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      id="city"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      placeholder="City"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="postcode" className="block text-sm font-medium text-gray-700 mb-2">
+                      Postcode *
+                    </label>
+                    <input
+                      type="text"
+                      id="postcode"
+                      name="postcode"
+                      value={formData.postcode}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      placeholder="Postal code"
+                    />
+                  </div>
+                </div>
+
+                {/* Country, State */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+                      Country *
+                    </label>
+                    <select
+                      id="country"
+                      name="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                    >
+                      <option value="United Kingdom">United Kingdom</option>
+                      <option value="United States">United States</option>
+                      <option value="Canada">Canada</option>
+                      <option value="Australia">Australia</option>
+                      <option value="Germany">Germany</option>
+                      <option value="France">France</option>
+                      <option value="Spain">Spain</option>
+                      <option value="Italy">Italy</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                      State/Province
+                    </label>
+                    <input
+                      type="text"
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      placeholder="State or province"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Numbers */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      placeholder="Phone number"
+                    />
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      resetForm();
+                    }}
+                    className="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-8 py-3 text-sm font-medium text-white bg-[#368899] rounded-lg hover:bg-[#2d7a8a] transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? 'Saving...' : (editingAddress ? 'Update Address' : 'Add Address')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

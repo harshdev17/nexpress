@@ -1,12 +1,139 @@
+"use client";
+
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
-
-export const metadata = {
-  title: "Edit Account | Nexpress Delivery",
-  description: "Update your account information and preferences.",
-};
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function EditAccountPage() {
+  const router = useRouter();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/customer/login');
+        return;
+      }
+
+      const response = await fetch('/api/protected/profile', {
+        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        router.push('/customer/login');
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setProfile(data.profile);
+      } else {
+        setError(data.error || 'Failed to fetch profile');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push('/customer/login');
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      const updateData = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        company: formData.get('company'),
+        telephone: formData.get('telephone'),
+        mobile: formData.get('mobile'),
+        fax: formData.get('fax'),
+        customerReference: formData.get('customerReference'),
+        fileAsName: formData.get('fileAsName'),
+        taxReference: formData.get('taxReference'),
+        taxStatus: formData.get('taxStatus'),
+        notes: formData.get('notes')
+      };
+
+      const response = await fetch('/api/protected/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Profile updated successfully!');
+        fetchProfile(); // Refresh the profile data
+      } else {
+        alert(data.error || 'Failed to update profile');
+      }
+    } catch (err) {
+      alert('Network error. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className="w-full bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 animate-pulse"></div>
+            <p className="text-gray-500">Loading profile...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="w-full bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Error Loading Profile</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={fetchProfile}
+              className="px-6 py-3 bg-[#368899] text-white rounded-xl hover:bg-[#2d7a8a] transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="w-full bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -45,7 +172,25 @@ export default function EditAccountPage() {
 
         {/* Edit Account Form */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <form className="space-y-8">
+          {/* Address Management Notice */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-blue-800">Address Management</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  To manage your delivery and billing addresses, please visit the 
+                  <Link href="/customer/account/addresses" className="underline hover:text-blue-800">
+                    Address Book
+                  </Link> section.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <form className="space-y-8" onSubmit={handleSubmit}>
             {/* Personal Details Section */}
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="flex items-center space-x-3 mb-6">
@@ -66,7 +211,7 @@ export default function EditAccountPage() {
                     type="text"
                     id="firstName"
                     name="firstName"
-                    defaultValue="John"
+                    defaultValue={profile?.firstName || ""}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
@@ -79,7 +224,7 @@ export default function EditAccountPage() {
                     type="text"
                     id="lastName"
                     name="lastName"
-                    defaultValue="Smith"
+                    defaultValue={profile?.lastName || ""}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
@@ -92,36 +237,39 @@ export default function EditAccountPage() {
                     type="email"
                     id="email"
                     name="email"
-                    defaultValue="john.smith@example.com"
+                    defaultValue={profile?.email || ""}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                    Username
                   </label>
                   <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    defaultValue="+44 20 7946 0958"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                    type="text"
+                    id="username"
+                    name="username"
+                    defaultValue={profile?.username || ""}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Username cannot be changed</p>
                 </div>
               </div>
             </div>
 
-            {/* Address Information Section */}
+            {/* Business Information Section */}
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Address Information</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Business Information</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -133,89 +281,75 @@ export default function EditAccountPage() {
                     type="text"
                     id="company"
                     name="company"
-                    defaultValue="Tech Solutions Ltd"
+                    defaultValue={profile?.company || ""}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
                 </div>
                 <div>
-                  <label htmlFor="address1" className="block text-sm font-medium text-gray-700 mb-2">
-                    Address Line 1 *
+                  <label htmlFor="customerReference" className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer Reference
                   </label>
                   <input
                     type="text"
-                    id="address1"
-                    name="address1"
-                    defaultValue="123 Business Street"
-                    required
+                    id="customerReference"
+                    name="customerReference"
+                    defaultValue={profile?.customerReference || ""}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
                 </div>
                 <div>
-                  <label htmlFor="address2" className="block text-sm font-medium text-gray-700 mb-2">
-                    Address Line 2
+                  <label htmlFor="fileAsName" className="block text-sm font-medium text-gray-700 mb-2">
+                    File As Name
                   </label>
                   <input
                     type="text"
-                    id="address2"
-                    name="address2"
-                    defaultValue="Suite 100"
+                    id="fileAsName"
+                    name="fileAsName"
+                    defaultValue={profile?.fileAsName || ""}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
                 </div>
                 <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                    City *
+                  <label htmlFor="taxReference" className="block text-sm font-medium text-gray-700 mb-2">
+                    Tax Reference
                   </label>
                   <input
                     type="text"
-                    id="city"
-                    name="city"
-                    defaultValue="London"
-                    required
+                    id="taxReference"
+                    name="taxReference"
+                    defaultValue={profile?.taxReference || ""}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
                 </div>
                 <div>
-                  <label htmlFor="postcode" className="block text-sm font-medium text-gray-700 mb-2">
-                    Postcode *
-                  </label>
-                  <input
-                    type="text"
-                    id="postcode"
-                    name="postcode"
-                    defaultValue="SW1A 1AA"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                    Country *
+                  <label htmlFor="taxStatus" className="block text-sm font-medium text-gray-700 mb-2">
+                    Tax Status
                   </label>
                   <select
-                    id="country"
-                    name="country"
-                    defaultValue="United Kingdom"
-                    required
+                    id="taxStatus"
+                    name="taxStatus"
+                    defaultValue={profile?.taxStatus || "Taxable"}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   >
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Australia">Australia</option>
+                    <option value="Taxable">Taxable</option>
+                    <option value="Exempt">Exempt</option>
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
-                    State/Province
+                  <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
+                    User Type
                   </label>
-                  <input
-                    type="text"
-                    id="state"
-                    name="state"
-                    defaultValue="England"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
-                  />
+                  <select
+                    id="userType"
+                    name="userType"
+                    defaultValue={profile?.type || "Wholesaler"}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                  >
+                    <option value="Wholesaler">Wholesaler</option>
+                    <option value="Standard">Standard</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">User type cannot be changed</p>
                 </div>
               </div>
             </div>
@@ -231,7 +365,7 @@ export default function EditAccountPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-2">
                     Mobile Number
@@ -240,7 +374,7 @@ export default function EditAccountPage() {
                     type="tel"
                     id="mobile"
                     name="mobile"
-                    defaultValue="+44 7911 123456"
+                    defaultValue={profile?.mobile || ""}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
                 </div>
@@ -252,63 +386,53 @@ export default function EditAccountPage() {
                     type="tel"
                     id="telephone"
                     name="telephone"
-                    defaultValue="+44 20 7946 0958"
+                    defaultValue={profile?.telephone || ""}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="fax" className="block text-sm font-medium text-gray-700 mb-2">
+                    Fax
+                  </label>
+                  <input
+                    type="tel"
+                    id="fax"
+                    name="fax"
+                    defaultValue={profile?.fax || ""}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Communication Preferences Section */}
+            {/* Additional Information Section */}
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Communication Preferences</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Additional Information</h2>
               </div>
               
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="emailUpdates"
-                    name="emailUpdates"
-                    defaultChecked
-                    className="w-4 h-4 text-[#368899] border-gray-300 rounded focus:ring-[#368899]"
-                  />
-                  <label htmlFor="emailUpdates" className="ml-3 text-sm text-gray-700">
-                    Receive email updates about orders and promotions
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes
                   </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="smsUpdates"
-                    name="smsUpdates"
-                    className="w-4 h-4 text-[#368899] border-gray-300 rounded focus:ring-[#368899]"
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    rows={4}
+                    defaultValue={profile?.notes || ""}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors resize-none"
+                    placeholder="Any additional notes or comments..."
                   />
-                  <label htmlFor="smsUpdates" className="ml-3 text-sm text-gray-700">
-                    Receive SMS updates about delivery status
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="newsletter"
-                    name="newsletter"
-                    defaultChecked
-                    className="w-4 h-4 text-[#368899] border-gray-300 rounded focus:ring-[#368899]"
-                  />
-                  <label htmlFor="newsletter" className="ml-3 text-sm text-gray-700">
-                    Subscribe to our newsletter for special offers
-                  </label>
                 </div>
               </div>
             </div>
+
 
             {/* Form Actions */}
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -320,9 +444,10 @@ export default function EditAccountPage() {
               </Link>
               <button
                 type="submit"
-                className="px-8 py-3 text-sm font-medium text-white bg-[#368899] rounded-lg hover:bg-[#2d7a8a] transition-colors shadow-lg"
+                disabled={saving}
+                className="px-8 py-3 text-sm font-medium text-white bg-[#368899] rounded-lg hover:bg-[#2d7a8a] transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save Changes
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>

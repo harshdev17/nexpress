@@ -21,18 +21,16 @@ export async function GET(request) {
       SELECT 
         ca.id,
         ca.AddressType,
-        ca.Nickname,
+        ca.Company,
         ca.Forename,
         ca.Surname,
-        ca.Company,
         ca.Address1,
         ca.Address2,
         ca.City,
         ca.Postcode,
         ca.CountryName,
         ca.State,
-        ca.Tel,
-        ca.Email
+        ca.Tel
       FROM customer_addresses ca
       WHERE ca.CustomerId = ? AND ca.Deleted = 0
       ORDER BY ca.id DESC
@@ -53,8 +51,8 @@ export async function GET(request) {
         country: addr.CountryName || 'United Kingdom',
         state: addr.State || '',
         phone: addr.Tel || '',
-        email: addr.Email || '',
-        nickname: addr.Nickname || ''
+        mobile: '', // MobileTel column doesn't exist in customer_addresses table
+        email: '' // Email field doesn't exist in customer_addresses table
       }))
     });
 
@@ -94,30 +92,22 @@ export async function POST(request) {
       postcode,
       country,
       state,
-      phone,
-      email
+      phone
     } = body;
 
-    // If setting as default, unset other defaults first
-    if (isDefault) {
-      await old_db.promise().query(`
-        UPDATE customer_addresses 
-        SET IsDefault = 0 
-        WHERE CustomerID = ? AND Deleted = 0
-      `, [userId]);
-    }
+    // Note: IsDefault column doesn't exist in schema, so we skip this logic
 
     // Insert new address
     const [result] = await old_db.promise().query(`
       INSERT INTO customer_addresses (
-        CustomerID, AddressType, IsDefault, ContactName, CompanyName,
-        AddressLine1, AddressLine2, City, Postcode, Country, State,
-        PhoneNumber, Email, CreatedDateTime, ModifiedDateTime, Deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 0)
+        CustomerId, AddressType, Company, Forename, Surname,
+        Address1, Address2, City, Postcode, CountryName, State,
+        Tel, Deleted
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `, [
-      userId, type, isDefault ? 1 : 0, name, company,
+      userId, type, company, name.split(' ')[0] || '', name.split(' ').slice(1).join(' ') || '',
       address1, address2, city, postcode, country, state,
-      phone, email
+      phone
     ]);
 
     return NextResponse.json({
@@ -151,26 +141,20 @@ export async function PUT(request) {
     const body = await request.json();
     const { addressId, ...updateData } = body;
 
-    // If setting as default, unset other defaults first
-    if (updateData.isDefault) {
-      await old_db.promise().query(`
-        UPDATE customer_addresses 
-        SET IsDefault = 0 
-        WHERE CustomerID = ? AND Deleted = 0 AND id != ?
-      `, [userId, addressId]);
-    }
+    // Note: IsDefault column doesn't exist in schema, so we skip this logic
 
     // Update address
     await old_db.promise().query(`
       UPDATE customer_addresses SET
-        AddressType = ?, IsDefault = ?, ContactName = ?, CompanyName = ?,
-        AddressLine1 = ?, AddressLine2 = ?, City = ?, Postcode = ?, 
-        Country = ?, State = ?, PhoneNumber = ?, Email = ?, ModifiedDateTime = NOW()
-      WHERE id = ? AND CustomerID = ? AND Deleted = 0
+        AddressType = ?, Company = ?, Forename = ?, Surname = ?,
+        Address1 = ?, Address2 = ?, City = ?, Postcode = ?, 
+        CountryName = ?, State = ?, Tel = ?
+      WHERE id = ? AND CustomerId = ? AND Deleted = 0
     `, [
-      updateData.type, updateData.isDefault ? 1 : 0, updateData.name, updateData.company,
+      updateData.type, updateData.company, 
+      updateData.name.split(' ')[0] || '', updateData.name.split(' ').slice(1).join(' ') || '',
       updateData.address1, updateData.address2, updateData.city, updateData.postcode,
-      updateData.country, updateData.state, updateData.phone, updateData.email,
+      updateData.country, updateData.state, updateData.phone,
       addressId, userId
     ]);
 
@@ -209,8 +193,8 @@ export async function DELETE(request) {
     // Soft delete address
     await old_db.promise().query(`
       UPDATE customer_addresses 
-      SET Deleted = 1, ModifiedDateTime = NOW()
-      WHERE id = ? AND CustomerID = ? AND Deleted = 0
+      SET Deleted = 1
+      WHERE id = ? AND CustomerId = ? AND Deleted = 0
     `, [addressId, userId]);
 
     return NextResponse.json({ success: true });
