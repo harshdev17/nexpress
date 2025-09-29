@@ -2,6 +2,8 @@
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
 import { useState, useEffect } from "react";
+import AuthGuard from '@/components/common/AuthGuard';
+import ReorderButton from '@/components/common/ReorderButton';
 
 export default function OrdersPage() {
   const [search, setSearch] = useState("");
@@ -112,6 +114,7 @@ export default function OrdersPage() {
   );
 
   return (
+    <AuthGuard>
     <main className="w-full bg-gray-50 min-h-screen overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
@@ -244,7 +247,7 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="flex justify-center sm:justify-start">
-                      <span className={`px-4 py-2 rounded-xl text-sm font-medium border ${getStatusColor(order.OrderStatus)} flex items-center space-x-2`}>
+                      <span className={`px-4 py-2 rounded-xl text-sm font-medium border ${getStatusColor(order.OrderStatus)} flex items.center space-x-2`}>
                         {getStatusIcon(order.OrderStatus)}
                         <span>{order.OrderStatus || 'Unknown'}</span>
                       </span>
@@ -302,7 +305,7 @@ export default function OrdersPage() {
                         {(order.OrderStatus?.toLowerCase() === "shipped" || order.OrderStatus?.toLowerCase() === "in transit" || order.OrderStatus?.toLowerCase() === "dispatched") && (
                           <Link
                             href={`/customer/account/orders/${order.id}/track`}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text.white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -312,12 +315,7 @@ export default function OrdersPage() {
                         )}
                       </div>
                       {(order.OrderStatus?.toLowerCase() === "delivered" || order.OrderStatus?.toLowerCase() === "completed") && (
-                        <button className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          Reorder
-                        </button>
+                        <ReorderButton items={order.items || []} />
                       )}
                     </div>
                   </div>
@@ -328,5 +326,6 @@ export default function OrdersPage() {
         </div>
       </div>
     </main>
+    </AuthGuard>
   );
 }

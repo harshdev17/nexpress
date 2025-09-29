@@ -38,10 +38,59 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
       .replace(/^-+|-+$/g, '');
   };
 
+  // Helpers to parse keywords from product text
+  const textOf = (p) => `${(p.ItemName||'')} ${(p.ItemShortDesc||'')} ${(p.Brand||'')}`.toLowerCase();
+
+  const detectPackSize = (p) => {
+    const t = textOf(p);
+    const match = t.match(/(\b\d{1,2})\s*[x×]\s*\d+/i) || t.match(/pack\s*(of)?\s*(\d{1,2})/i);
+    const n = match ? parseInt(match[1] || match[2], 10) : null;
+    if (!n) return null;
+    if (n <= 6) return 'Up to 6';
+    if (n <= 12) return '7-12';
+    if (n <= 24) return '13-24';
+    return '25+';
+  };
+
+  const detectVolumeMl = (p) => {
+    const t = textOf(p);
+    // match e.g., 330ml, 1l, 1.5 l, 2L
+    const ml = t.match(/(\d+(?:\.\d+)?)\s*ml/);
+    const l = t.match(/(\d+(?:\.\d+)?)\s*l(?!b)/);
+    let volMl = null;
+    if (ml) volMl = parseFloat(ml[1]);
+    else if (l) volMl = parseFloat(l[1]) * 1000;
+    return volMl;
+  };
+
+  const detectFlavour = (p) => {
+    const t = textOf(p);
+    const flavours = ['lemon','orange','mango','strawberry','chocolate','vanilla','mint','berry','lime','peach'];
+    for (const f of flavours) { if (t.includes(f)) return f[0].toUpperCase()+f.slice(1); }
+    return 'Plain';
+  };
+
+  const detectDietary = (p) => {
+    const t = textOf(p);
+    const tags = [];
+    if (t.includes('sugar free') || t.includes('sugar-free') || t.includes('zero sugar')) tags.push('Sugar Free');
+    if (t.includes('low sugar')) tags.push('Low Sugar');
+    if (t.includes('vegan')) tags.push('Vegan');
+    return tags;
+  };
+
   const initialState = useMemo(() => ({
     inStock: searchParams.get("inStock") === "1",
     discounted: searchParams.get("discounted") === "1",
     newArrivals: searchParams.get("newArrivals") === "1",
+    featured: searchParams.get("featured") === "1",
+    includeSoldOut: searchParams.get("includeSoldOut") === "1",
+    onSaleOnly: searchParams.get("onSaleOnly") === "1",
+    brands: new Set((searchParams.get("brands") || "").split(",").filter(Boolean)),
+    packs: new Set((searchParams.get("packs") || "").split(",").filter(Boolean)),
+    volumes: new Set((searchParams.get("vol") || "").split(",").filter(Boolean)),
+    flavours: new Set((searchParams.get("flavours") || "").split(",").filter(Boolean)),
+    dietary: new Set((searchParams.get("dietary") || "").split(",").filter(Boolean)),
     packaging: new Set((searchParams.get("packaging") || "").split(",").filter(Boolean)),
     waterTypes: new Set((searchParams.get("waterTypes") || "").split(",").filter(Boolean)),
     countries: new Set((searchParams.get("countries") || "").split(",").filter(Boolean)),
@@ -63,15 +112,24 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
     params.set("inStock", state.inStock ? "1" : "0");
     params.set("discounted", state.discounted ? "1" : "0");
     params.set("newArrivals", state.newArrivals ? "1" : "0");
+    params.set("featured", state.featured ? "1" : "0");
+    params.set("includeSoldOut", state.includeSoldOut ? "1" : "0");
+    params.set("onSaleOnly", state.onSaleOnly ? "1" : "0");
     params.set("minPrice", String(state.minPrice ?? ""));
     params.set("maxPrice", String(state.maxPrice ?? ""));
 
-    const pack = Array.from(state.packaging.values()).join(",");
-    const wtype = Array.from(state.waterTypes.values()).join(",");
-    const ctr = Array.from(state.countries.values()).join(",");
-    if (pack) params.set("packaging", pack); else params.delete("packaging");
-    if (wtype) params.set("waterTypes", wtype); else params.delete("waterTypes");
-    if (ctr) params.set("countries", ctr); else params.delete("countries");
+    const setFrom = (key, set) => {
+      const v = Array.from(set.values()).join(",");
+      if (v) params.set(key, v); else params.delete(key);
+    };
+    setFrom("brands", state.brands);
+    setFrom("packs", state.packs);
+    setFrom("vol", state.volumes);
+    setFrom("flavours", state.flavours);
+    setFrom("dietary", state.dietary);
+    setFrom("packaging", state.packaging);
+    setFrom("waterTypes", state.waterTypes);
+    setFrom("countries", state.countries);
 
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -81,7 +139,7 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
     const id = setTimeout(() => updateUrl(), 250);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.inStock, state.discounted, state.newArrivals, state.packaging, state.waterTypes, state.countries, state.minPrice, state.maxPrice]);
+  }, [state]);
 
   const clearAll = () => {
     const params = new URLSearchParams();
@@ -94,7 +152,34 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
     return next;
   };
 
-  // Dynamic filter options based on products
+  // Dynamic options
+  const brandOptions = useMemo(() => {
+    const s = new Set();
+    (products||[]).forEach(p => { const b = (p.Brand||'').trim(); if (b) s.add(b); });
+    return Array.from(s).sort((a,b)=>a.localeCompare(b));
+  }, [products]);
+
+  const packOptions = useMemo(() => {
+    const s = new Set();
+    (products||[]).forEach(p => { const v = detectPackSize(p); if (v) s.add(v); });
+    return Array.from(s).sort();
+  }, [products]);
+
+  const volumeOptions = ['0-330ml','331-750ml','751-1500ml','1501ml+'];
+
+  const flavourOptions = useMemo(() => {
+    const s = new Set();
+    (products||[]).forEach(p => s.add(detectFlavour(p)));
+    return Array.from(s).sort();
+  }, [products]);
+
+  const dietaryOptions = useMemo(() => {
+    const s = new Set();
+    (products||[]).forEach(p => detectDietary(p).forEach(t=>s.add(t)));
+    return Array.from(s).sort();
+  }, [products]);
+
+  // Existing dynamic packaging and water type options
   const getDynamicPackagingOptions = () => {
     if (!Array.isArray(products) || products.length === 0) {
       return data?.packagingOptions || [];
@@ -103,20 +188,16 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
     const packagingSet = new Set();
     
     products.forEach(product => {
-      // Check product name for packaging keywords
       const name = (product.ItemName || '').toLowerCase();
       const description = (product.ItemShortDesc || '').toLowerCase();
       const brand = (product.Brand || '').toLowerCase();
       
-      // Glass packaging detection
       if (name.includes('glass') || description.includes('glass') || 
           name.includes('bottle') && (name.includes('glass') || description.includes('glass')) ||
           name.includes('jar') || description.includes('jar') ||
           name.includes('vial') || description.includes('vial')) {
         packagingSet.add('Glass');
       }
-      
-      // Plastic packaging detection
       if (name.includes('plastic') || description.includes('plastic') || 
           name.includes('bottle') && (name.includes('plastic') || description.includes('plastic')) ||
           name.includes('pet') || description.includes('pet') ||
@@ -124,8 +205,6 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
           name.includes('container') && (name.includes('plastic') || description.includes('plastic'))) {
         packagingSet.add('Plastic');
       }
-      
-      // Carton/Can packaging detection
       if (name.includes('carton') || description.includes('carton') || 
           name.includes('can') || description.includes('can') ||
           name.includes('tin') || description.includes('tin') ||
@@ -151,7 +230,6 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
       const name = (product.ItemName || '').toLowerCase();
       const description = (product.ItemShortDesc || '').toLowerCase();
       
-      // Still water detection
       if (name.includes('still') || description.includes('still') ||
           name.includes('natural') || description.includes('natural') ||
           name.includes('spring') || description.includes('spring') ||
@@ -161,8 +239,6 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
           name.includes('filtered') || description.includes('filtered')) {
         waterTypeSet.add('Still');
       }
-      
-      // Sparkling water detection
       if (name.includes('sparkling') || description.includes('sparkling') ||
           name.includes('carbonated') || description.includes('carbonated') ||
           name.includes('fizzy') || description.includes('fizzy') ||
@@ -185,6 +261,13 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
   if (state.inStock) chips.push({ k: 'In stock' });
   if (state.discounted) chips.push({ k: 'Discounted' });
   if (state.newArrivals) chips.push({ k: 'New' });
+  if (state.featured) chips.push({ k: 'Featured' });
+  if (state.onSaleOnly) chips.push({ k: 'On sale' });
+  Array.from(state.brands).forEach(v => chips.push({ k: v }));
+  Array.from(state.packs).forEach(v => chips.push({ k: `${v} pack` }));
+  Array.from(state.volumes).forEach(v => chips.push({ k: v }));
+  Array.from(state.flavours).forEach(v => chips.push({ k: v }));
+  Array.from(state.dietary).forEach(v => chips.push({ k: v }));
   Array.from(state.packaging).forEach(v => chips.push({ k: v }));
   Array.from(state.waterTypes).forEach(v => chips.push({ k: v }));
   Array.from(state.countries).forEach(v => chips.push({ k: v }));
@@ -213,14 +296,29 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
           <span>Show in stock only</span>
         </label>
         <label className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
-          <input type="checkbox" checked={state.discounted} onChange={(e) => setState(s => ({ ...s, discounted: e.target.checked }))} />
-          <span>Discounted</span>
+          <input type="checkbox" checked={state.onSaleOnly} onChange={(e) => setState(s => ({ ...s, onSaleOnly: e.target.checked }))} />
+          <span>On sale only</span>
+        </label>
+        <label className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
+          <input type="checkbox" checked={state.featured} onChange={(e) => setState(s => ({ ...s, featured: e.target.checked }))} />
+          <span>Featured only</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer hover:text-teal-700">
-          <input type="checkbox" checked={state.newArrivals} onChange={(e) => setState(s => ({ ...s, newArrivals: e.target.checked }))} />
-          <span>New arrivals</span>
+          <input type="checkbox" checked={state.includeSoldOut} onChange={(e) => setState(s => ({ ...s, includeSoldOut: e.target.checked }))} />
+          <span>Include sold out</span>
         </label>
       </Section>
+
+      {brandOptions.length > 0 && (
+        <Section title="Brand" defaultOpen={true}>
+          {brandOptions.map(b => (
+            <label key={b} className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
+              <input type="checkbox" checked={state.brands.has(b)} onChange={() => setState(s => ({ ...s, brands: toggleInSet(s.brands, b) }))} />
+              <span>{b}</span>
+            </label>
+          ))}
+        </Section>
+      )}
 
       {Array.isArray(data?.categories) && data.categories.length > 0 && (
         <Section title="Browse Categories" defaultOpen={false}>
@@ -289,8 +387,6 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
         </Section>
       )}
 
-      {/* Sub Categories section is now nested inside Browse Categories */}
-      
       {dynamicPackagingOptions.length > 0 && (
         <Section title="Packaging" defaultOpen={true}>
           {dynamicPackagingOptions.map(opt => (
@@ -321,6 +417,48 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
         </Section>
       )}
 
+      {packOptions.length > 0 && (
+        <Section title="Pack Size" defaultOpen={false}>
+          {packOptions.map(opt => (
+            <label key={opt} className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
+              <input type="checkbox" checked={state.packs.has(opt)} onChange={() => setState(s => ({ ...s, packs: toggleInSet(s.packs, opt) }))} />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </Section>
+      )}
+
+      <Section title="Volume" defaultOpen={false}>
+        {volumeOptions.map(opt => (
+          <label key={opt} className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
+            <input type="checkbox" checked={state.volumes.has(opt)} onChange={() => setState(s => ({ ...s, volumes: toggleInSet(s.volumes, opt) }))} />
+            <span>{opt}</span>
+          </label>
+        ))}
+      </Section>
+
+      {flavourOptions.length > 0 && (
+        <Section title="Flavour" defaultOpen={false}>
+          {flavourOptions.map(opt => (
+            <label key={opt} className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
+              <input type="checkbox" checked={state.flavours.has(opt)} onChange={() => setState(s => ({ ...s, flavours: toggleInSet(s.flavours, opt) }))} />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </Section>
+      )}
+
+      {dietaryOptions.length > 0 && (
+        <Section title="Dietary" defaultOpen={false}>
+          {dietaryOptions.map(opt => (
+            <label key={opt} className="flex items-center gap-2 mb-2 cursor-pointer hover:text-teal-700">
+              <input type="checkbox" checked={state.dietary.has(opt)} onChange={() => setState(s => ({ ...s, dietary: toggleInSet(s.dietary, opt) }))} />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </Section>
+      )}
+
       {Array.isArray(data?.countries) && data.countries.length > 0 && (
         <Section title="Country of Origin" defaultOpen={false}>
           {data.countries.map(opt => (
@@ -342,12 +480,8 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
             <span>£{state.minPrice.toFixed(0)}</span>
             <span>£{state.maxPrice.toFixed(0)}</span>
           </div>
-          
           <div className="relative h-6">
-            {/* Background track */}
             <div className="absolute top-1/2 left-0 right-0 h-2 bg-slate-200 rounded-lg transform -translate-y-1/2"></div>
-            
-            {/* Active range */}
             <div 
               className="absolute top-1/2 h-2 bg-[#368899] rounded-lg transform -translate-y-1/2"
               style={{
@@ -355,8 +489,6 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
                 width: `${((state.maxPrice - state.minPrice) / ((data?.price?.max ?? 100) - (data?.price?.min ?? 0))) * 100}%`,
               }}
             ></div>
-            
-            {/* Min price slider */}
             <input
               type="range"
               min={data?.price?.min ?? 0}
@@ -370,14 +502,8 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
                 }
               }}
               className="absolute top-1/2 left-0 w-full h-2 bg-transparent appearance-none cursor-pointer transform -translate-y-1/2 z-10"
-              style={{ 
-                background: 'transparent',
-                WebkitAppearance: 'none',
-                appearance: 'none'
-              }}
+              style={{ background: 'transparent', WebkitAppearance: 'none', appearance: 'none' }}
             />
-            
-            {/* Max price slider */}
             <input
               type="range"
               min={data?.price?.min ?? 0}
@@ -391,14 +517,9 @@ export default function ProductsFilterSidebar({ data, products = [] }) {
                 }
               }}
               className="absolute top-1/2 left-0 w-full h-2 bg-transparent appearance-none cursor-pointer transform -translate-y-1/2 z-20"
-              style={{ 
-                background: 'transparent',
-                WebkitAppearance: 'none',
-                appearance: 'none'
-              }}
+              style={{ background: 'transparent', WebkitAppearance: 'none', appearance: 'none' }}
             />
           </div>
-          
           <div className="flex justify-between text-xs text-slate-500">
             <span>£{data?.price?.min ?? 0}</span>
             <span>£{data?.price?.max ?? 100}</span>
@@ -446,11 +567,11 @@ const sliderStyles = `
   }
 `;
 
-// Inject styles
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style');
   styleSheet.textContent = sliderStyles;
   document.head.appendChild(styleSheet);
 }
+
 
 

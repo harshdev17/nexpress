@@ -9,16 +9,48 @@ import {
   SearchIcon,
 } from "../icons";
 import { useState, useEffect } from "react";
-import { categories } from "../categories";
+// Removed static categories import; we'll fetch dynamically like Header
+// import { categories } from "../categories";
 import "./footer.css";
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
+  const [menuCategories, setMenuCategories] = useState([]);
 
   useEffect(() => {
     setCurrentPath(window.location.pathname);
+  }, []);
+
+  // Fetch dynamic categories (same as Header)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/categories', { cache: 'no-store' });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.categories)) {
+          const slugify = (p, name) => {
+            const s = (p && String(p).trim()) || '';
+            if (s) return s;
+            return String(name || '')
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+          };
+          const mapNode = (n) => ({
+            name: n.CatName,
+            url: `/categories/${encodeURIComponent(slugify(n.PageName, n.CatName))}`,
+            subcategories: Array.isArray(n.children) ? n.children.map(mapNode) : []
+          });
+          setMenuCategories(data.categories.map(mapNode));
+        } else {
+          setMenuCategories([]);
+        }
+      } catch {
+        setMenuCategories([]);
+      }
+    })();
   }, []);
 
   const handleNewsletterSubmit = (e) => {
@@ -377,17 +409,17 @@ export default function Footer() {
       </div>
       </div> */}
       <div className="bottom_navbar">
-        <div class="qaf__bottom_bar_container">
-          <div class="qaf__left_blank_div"></div>
-          <div class="qaf__left_blank_div_wrap"></div>
+        <div className="qaf__bottom_bar_container">
+          <div className="qaf__left_blank_div"></div>
+          <div className="qaf__left_blank_div_wrap"></div>
 
           <img
-            class="qaf__bottomNavBar_img"
+            className="qaf__bottomNavBar_img"
             src="https://static.99acres.com/universalhp/img/m_hp_bottomNavBar_svg.svg"
           />
-       
-          <div class="qaf__right_blank_div"></div>
-          <div class="qaf__right_blank_div_wrap"></div>
+      
+          <div className="qaf__right_blank_div"></div>
+          <div className="qaf__right_blank_div_wrap"></div>
         </div>
 
           <button className="search-icon" onClick={focusSearch}>
@@ -463,11 +495,12 @@ export default function Footer() {
               {/* Categories Dropdown Menu */}
               {isCategoriesOpen && (
                 <div className="categories-dropdown">
-                  {categories.map((category, index) => (
+                  {menuCategories.map((category, index) => (
                     <div key={index} className="category-block">
                       <Link
-                        href={category.url === "#" ? `/categories/${category.name.toLowerCase().replace(/\s+/g, '-')}` : category.url}
+                        href={category.url}
                         className="main-link"
+                        onClick={() => setIsCategoriesOpen(false)}
                       >
                         {category.name}
                       </Link>
@@ -478,6 +511,7 @@ export default function Footer() {
                               key={subIndex}
                               href={sub.url}
                               className="sub-link"
+                              onClick={() => setIsCategoriesOpen(false)}
                             >
                               {sub.name}
                             </Link>

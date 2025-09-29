@@ -7,6 +7,7 @@ import ProductsToolbar from '@/components/common/ProductsToolbar';
 import NoProductsFound from '@/components/common/NoProductsFound';
 import { db, old_db } from '@/lib/db';
 import BrandLogo from '@/components/common/BrandLogo';
+import MobileFilters from '@/components/common/MobileFilters';
 
 async function runQuery(sql, params = []) {
   const pools = [old_db].filter(Boolean);
@@ -56,13 +57,10 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
     // Fallback: search by slugified ItemName within parent category
     let parentSlug;
     if (parts.length === 2) {
-      // products/cat/productslug - category is parts[0]
       parentSlug = decodeURIComponent(parts[0] || '').toLowerCase();
     } else if (parts.length === 3) {
-      // products/cat/subcat/productslug - subcategory is parts[1]
       parentSlug = decodeURIComponent(parts[1] || '').toLowerCase();
     } else {
-      // Fallback to first part
       parentSlug = decodeURIComponent(parts[0] || '').toLowerCase();
     }
     
@@ -86,7 +84,6 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   }
   
   if (resolvedProduct) {
-    // Get product's category for breadcrumb
     const productCategory = await runQuery(
       `SELECT c.id, c.CatName, c.PageName
        FROM categories c
@@ -96,7 +93,6 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
     );
     const category = productCategory?.[0];
 
-    // Get related products from same category
     const relatedProducts = await runQuery(
       `SELECT p.id, p.ItemName, p.ItemPrice, p.ItemMainImage, p.PageName, p.Brand, p.ItemShortDesc
        FROM products p
@@ -107,7 +103,6 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
       [resolvedProduct.id, resolvedProduct.CategoryID1 || 0, resolvedProduct.CategoryID2 || 0]
     );
 
-    // Get product composition details from old_db (with fallback)
     let productComposition = [];
     try {
       productComposition = await runQuery(
@@ -120,7 +115,6 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
       );
     } catch (error) {
       console.log('Composition table not found, using fallback data');
-      // Fallback: Use basic product info for composition
       productComposition = [
         { DisplayCaption: 'Weight per pack', Value: `${resolvedProduct.ItemWeight || 'N/A'} kg` },
         { DisplayCaption: 'Package Size', Value: resolvedProduct.ItemPackageSizeText || 'N/A' },
@@ -138,14 +132,10 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
     />;
   }
   
-  // LISTING MODE: resolve category based on last slug (cat or subcat)
   const category = allCats.find(c => slugify(c.PageName, c.CatName) === target);
   if (!category) {
     return <div className="max-w-5xl mx-auto p-6">No products found.</div>;
   }
-//   const whereClause = isSubCategory
-//     ? 'p.CategoryID2 = ? OR p.CategoryID1 = ?'
-//     : 'p.CategoryID1 = ? OR p.CategoryID2 = ?';
   const where = isSubCategory ? 'p.CategoryID2 = ?' : 'p.CategoryID1 = ?';
   const rawProducts = await runQuery(
     `SELECT DISTINCT p.id, p.ItemName, p.ItemShortDesc, p.ItemPrice, p.ItemMainImage, p.Brand, p.Featured, p.IsSoldOut,
@@ -158,7 +148,6 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
      LIMIT 200`,
     [category.id, category.id]
   );
-  // Load main categories and subcategories for sidebar
   const mainCats = await runQuery(
     `SELECT c1.id, c1.CatName, c1.PageName, c1.ParentId,
             (SELECT COUNT(1) FROM categories c2 WHERE c2.ParentId = c1.id AND c2.Visible=1 AND c2.Deleted=0) AS ChildCount
@@ -178,37 +167,73 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
     const originalPrice = parseFloat(p.ItemPrice) || 0;
     let salePrice = 0;
     let isOnSale = false;
-    
-    // Handle product_pricing discount
     if (p.discount_price && p.discount_price > 0) {
       if (p.PriceType === 'Fixed') {
-        // Fixed discount: subtract the discount amount from original price
         salePrice = Math.max(0, originalPrice - parseFloat(p.discount_price));
         isOnSale = true;
       } else if (p.PriceType === 'Percentage') {
-        // Percentage discount: subtract percentage from original price
         const discountPercent = parseFloat(p.discount_price);
         salePrice = originalPrice * (1 - discountPercent / 100);
         isOnSale = true;
       }
     }
-    
-    // Fallback to ItemSalePrice if no product_pricing discount
     if (!isOnSale && p.ItemSalePrice && parseFloat(p.ItemSalePrice) > 0) {
       salePrice = parseFloat(p.ItemSalePrice);
       isOnSale = p.ItemIsOnSale === 1;
     }
-    
     return {
       ...p,
       ItemPrice: originalPrice,
       salePrice: salePrice,
-      discountPercentage: 0, // Calculate from price difference if needed
+      discountPercentage: 0,
       isOnSale: isOnSale,
       ItemMainImage: /^https?:\/\//i.test(p.ItemMainImage || '') ? p.ItemMainImage : `${base}/product/${String(p.ItemMainImage||'').replace(/^\/+/, '')}`
     };
   });
-  // Apply price range filtering
+
+  // Helpers for new filters
+  const textOf = (p) => `${(p.ItemName||'')} ${(p.ItemShortDesc||'')} ${(p.Brand||'')}`.toLowerCase();
+  const detectPackSize = (p) => {
+    const t = textOf(p);
+    const m1 = t.match(/(\b\d{1,2})\s*[x×]\s*\d+/i);
+    const m2 = t.match(/pack\s*(of)?\s*(\d{1,2})/i);
+    const n = m1 ? parseInt(m1[1],10) : (m2 ? parseInt(m2[2],10) : null);
+    if (!n) return null;
+    if (n <= 6) return 'Up to 6';
+    if (n <= 12) return '7-12';
+    if (n <= 24) return '13-24';
+    return '25+';
+  };
+  const detectVolumeMl = (p) => {
+    const t = textOf(p);
+    const ml = t.match(/(\d+(?:\.\d+)?)\s*ml/);
+    const l = t.match(/(\d+(?:\.\d+)?)\s*l(?!b)/); // avoid "lb"
+    let v = null; if (ml) v = parseFloat(ml[1]); else if (l) v = parseFloat(l[1])*1000; return v;
+  };
+  const detectFlavour = (p) => {
+    const t = textOf(p);
+    const flavours = ['lemon','orange','mango','strawberry','chocolate','vanilla','mint','berry','lime','peach'];
+    for (const f of flavours) { if (t.includes(f)) return f[0].toUpperCase()+f.slice(1); }
+    return 'Plain';
+  };
+  const hasDietary = (p, tag) => {
+    const t = textOf(p);
+    if (tag === 'Sugar Free') return t.includes('sugar free') || t.includes('sugar-free') || t.includes('zero sugar');
+    if (tag === 'Low Sugar') return t.includes('low sugar');
+    if (tag === 'Vegan') return t.includes('vegan');
+    return false;
+  };
+
+  // Read query params
+  const brandFilter = (searchParams?.brands || '').split(',').filter(Boolean);
+  const packFilter = (searchParams?.packs || '').split(',').filter(Boolean);
+  const volFilter = (searchParams?.vol || '').split(',').filter(Boolean);
+  const flavourFilter = (searchParams?.flavours || '').split(',').filter(Boolean);
+  const dietaryFilter = (searchParams?.dietary || '').split(',').filter(Boolean);
+  const featuredOnly = searchParams?.featured === '1';
+  const onSaleOnly = searchParams?.onSaleOnly === '1';
+  const includeSoldOut = searchParams?.includeSoldOut === '1';
+
   const minPrice = parseFloat(searchParams?.minPrice) || 0;
   const maxPrice = parseFloat(searchParams?.maxPrice) || 1000;
   const inStock = searchParams?.inStock === '1';
@@ -219,14 +244,18 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   let filteredProducts = products.filter(p => {
     const price = p.isOnSale && p.salePrice > 0 ? p.salePrice : p.ItemPrice;
     const priceMatch = price >= minPrice && price <= maxPrice;
-    const stockMatch = !inStock || !p.IsSoldOut;
+    const stockMatch = (includeSoldOut ? true : (!inStock || !p.IsSoldOut)) && (!inStock || !p.IsSoldOut);
+    const saleOnlyMatch = !onSaleOnly || (p.isOnSale && p.salePrice > 0);
+    const featuredMatch = !featuredOnly || !!p.Featured;
     const discountMatch = !discounted || (p.isOnSale && p.salePrice > 0);
-    
-    // Packaging filter
+
+    // Brand
+    const brandMatch = brandFilter.length === 0 || brandFilter.includes(String(p.Brand||'').trim());
+
+    // Packaging
     const packagingMatch = packagingFilter.length === 0 || packagingFilter.some(filter => {
       const name = (p.ItemName || '').toLowerCase();
       const description = (p.ItemShortDesc || '').toLowerCase();
-      
       if (filter === 'Glass') {
         return name.includes('glass') || description.includes('glass') || 
                (name.includes('bottle') && (name.includes('glass') || description.includes('glass'))) ||
@@ -251,12 +280,11 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
       }
       return false;
     });
-    
-    // Water type filter
+
+    // Water type
     const waterTypeMatch = waterTypeFilter.length === 0 || waterTypeFilter.some(filter => {
       const name = (p.ItemName || '').toLowerCase();
       const description = (p.ItemShortDesc || '').toLowerCase();
-      
       if (filter === 'Still') {
         return name.includes('still') || description.includes('still') ||
                name.includes('natural') || description.includes('natural') ||
@@ -277,11 +305,31 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
       }
       return false;
     });
-    
-    return priceMatch && stockMatch && discountMatch && packagingMatch && waterTypeMatch;
+
+    // Packs
+    const packBucket = detectPackSize(p);
+    const packMatch = packFilter.length === 0 || (packBucket && packFilter.includes(packBucket));
+
+    // Volume
+    const vml = detectVolumeMl(p) || 0;
+    const volMatch = volFilter.length === 0 || volFilter.some(b => {
+      if (b === '0-330ml') return vml > 0 && vml <= 330;
+      if (b === '331-750ml') return vml >= 331 && vml <= 750;
+      if (b === '751-1500ml') return vml >= 751 && vml <= 1500;
+      if (b === '1501ml+') return vml >= 1501;
+      return false;
+    });
+
+    // Flavour
+    const flav = detectFlavour(p);
+    const flavourMatch = flavourFilter.length === 0 || flavourFilter.includes(flav);
+
+    // Dietary
+    const dietaryMatch = dietaryFilter.length === 0 || dietaryFilter.every(tag => hasDietary(p, tag));
+
+    return priceMatch && stockMatch && saleOnlyMatch && featuredMatch && discountMatch && brandMatch && packagingMatch && waterTypeMatch && packMatch && volMatch && flavourMatch && dietaryMatch;
   });
 
-  // Apply sorting based on query
   const sort = String(searchParams?.sort || '').toLowerCase();
   if (sort === 'az') {
     filteredProducts = filteredProducts.slice().sort((a,b) => String(a.ItemName||'').localeCompare(String(b.ItemName||'')));
@@ -304,21 +352,10 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
   }
   const showCount = Math.max(1, Math.min(60, parseInt(searchParams?.show || '18', 10) || 18));
   const visibleProducts = filteredProducts.slice(0, showCount);
-  // Debug: Check for products with discounts
-  const discountedProducts = products.filter(p => p.isOnSale && p.salePrice > 0);
   const priceRange = {
-    min: Math.min(...products.map(p => {
-      const price = p.isOnSale && p.salePrice > 0 ? p.salePrice : p.ItemPrice;
-      return Number(price) || 0;
-    }), 0),
-    max: Math.max(...products.map(p => {
-      const price = p.isOnSale && p.salePrice > 0 ? p.salePrice : p.ItemPrice;
-      return Number(price) || 0;
-    }), 100)
+    min: Math.min(...products.map(p => { const price = p.isOnSale && p.salePrice > 0 ? p.salePrice : p.ItemPrice; return Number(price) || 0; }), 0),
+    max: Math.max(...products.map(p => { const price = p.isOnSale && p.salePrice > 0 ? p.salePrice : p.ItemPrice; return Number(price) || 0; }), 100)
   };
-  console.log("Total products:", products.length);
-  console.log("Discounted products:", discountedProducts.length);
-  console.log("Price range:", priceRange);
   return (
     <>
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -326,21 +363,35 @@ export default async function ProductsByCategoryPage({ params: paramsPromise, se
         <Link href="/">Home</Link> / <Link href={`/categories/${encodeURIComponent(category.PageName)}`} className="text-[#368899]">{category.CatName}</Link>
       </nav>
       <h1 className="text-2xl md:text-3xl font-bold text-[#368899] mb-6">{category.CatName}</h1>
+
+      {/* Mobile Filters bar */}
+      <MobileFilters
+        data={{
+          categories: mainCats.map(c => ({ id: c.id, name: c.CatName, slug: slugify(c.PageName, c.CatName), hasChildren: Number(c.ChildCount) > 0 })),
+          subCategories: subCats.map(c => ({ id: c.id, name: c.CatName, slug: slugify(c.PageName, c.CatName) })),
+          countries: [],
+          packagingOptions: [],
+          waterTypeOptions: [],
+          price: priceRange,
+        }}
+        products={products}
+      />
+
       <div className="lg:grid lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-3">
+        <div className="hidden lg:block lg:col-span-3">
           <ProductsFilterSidebar
             data={{
               categories: mainCats.map(c => ({ id: c.id, name: c.CatName, slug: slugify(c.PageName, c.CatName), hasChildren: Number(c.ChildCount) > 0 })),
               subCategories: subCats.map(c => ({ id: c.id, name: c.CatName, slug: slugify(c.PageName, c.CatName) })),
               countries: [],
-              packagingOptions: [], // Will be dynamically generated
-              waterTypeOptions: [], // Will be dynamically generated
+              packagingOptions: [],
+              waterTypeOptions: [],
               price: priceRange,
             }}
             products={products}
           />
         </div>
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9" id="product-list">
           <ProductsToolbar />
           {visibleProducts.length === 0 ? (
             <NoProductsFound type="filter" />

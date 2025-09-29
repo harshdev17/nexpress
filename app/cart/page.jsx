@@ -22,7 +22,6 @@ export default function CartPage() {
   };
 
   const handlePromoCode = () => {
-    // Placeholder for promo code logic
     setAlertMessage('Promo code applied successfully!');
     setShowAlert(true);
     setTimeout(() => setShowAlert(false), 3000);
@@ -39,7 +38,6 @@ export default function CartPage() {
   };
 
   const getVatRate = (item) => {
-    // Simple VAT logic - you can make this more sophisticated
     return item.brand?.toLowerCase().includes('sugar') ? 0 : 20;
   };
 
@@ -89,23 +87,23 @@ export default function CartPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Cart Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Cart Details</h1>
-          <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Cart Details</h1>
+          <div className="flex flex-col xs:flex-row sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
             <Link 
               href="/"
-              className="flex items-center gap-2 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+              className="flex items-center justify-center gap-2 bg-gray-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               CONTINUE SHOPPING
             </Link>
             <Link 
               href="/checkout"
-              className="flex items-center gap-2 bg-[#368899] text-white px-6 py-3 rounded-lg hover:bg-[#2d7a8a] transition-colors"
+              className="flex items-center justify-center gap-2 bg-[#368899] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-[#2d7a8a] transition-colors text-sm sm:text-base"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               CHECKOUT
@@ -133,17 +131,17 @@ export default function CartPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">Cart Items ({totals.itemCount})</h2>
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">Cart Items ({totals.itemCount})</h2>
                 </div>
                 <div className="divide-y divide-gray-200">
                   {items.map((item) => (
-                    <div key={item.id} className="p-6">
-                      <div className="flex items-start gap-4">
+                    <div key={item.id} className="p-4 sm:p-6">
+                      <div className="flex items-start gap-3 sm:gap-4">
                         {/* Product Image */}
                         <div className="flex-shrink-0">
                           <Image
@@ -151,71 +149,57 @@ export default function CartPage() {
                             alt={item.name}
                             width={80}
                             height={80}
-                            className="h-20 w-20 object-contain rounded-lg border border-gray-200"
+                            className="h-16 w-16 sm:h-20 sm:w-20 object-contain rounded-lg border border-gray-200"
                             unoptimized
                           />
                         </div>
-                        
                         {/* Product Details */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-medium text-gray-900 mb-1">{item.name}</h3>
-                          <p className="text-sm text-gray-500 mb-2">ID: {item.id}</p>
-                          
-                          {/* Price Display */}
+                          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1">{item.name}</h3>
+                          <p className="text-xs sm:text-sm text-gray-500 mb-2">ID: {item.id}</p>
+                          {/* Price */}
                           <div className="mb-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-lg font-semibold text-gray-900">
-                                £{getItemPrice(item).toFixed(2)}
-                              </span>
-                              <span className="text-sm text-gray-500">
-                                (inc {getVatRate(item)}% VAT)
-                              </span>
+                              <span className="text-base sm:text-lg font-semibold text-gray-900">£{getItemPrice(item).toFixed(2)}</span>
+                              <span className="text-xs sm:text-sm text-gray-500">(inc {getVatRate(item)}% VAT)</span>
                             </div>
-                            <div className="text-sm text-gray-500">
-                              £{(getItemPrice(item) / (1 + getVatRate(item) / 100)).toFixed(2)} (ex VAT)
-                            </div>
+                            <div className="text-xs sm:text-sm text-gray-500">£{(getItemPrice(item) / (1 + getVatRate(item) / 100)).toFixed(2)} (ex VAT)</div>
                           </div>
-                          
-                          {/* Quantity Controls */}
-                          <div className="flex items-center gap-4">
-                            <span className="text-sm font-medium text-gray-700">Quantity:</span>
-                            <div className="flex items-center gap-3">
+                          {/* Quantity */}
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <span className="text-xs sm:text-sm font-medium text-gray-700">Quantity:</span>
+                            <div className="flex items-center gap-2 sm:gap-3">
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                className="w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex items-center justify-center transition-colors shadow-sm"
+                                className="w-9 h-9 sm:w-12 sm:h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg sm:rounded-xl flex items-center justify-center transition-colors shadow-sm"
                               >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                                 </svg>
                               </button>
-                              <div className="w-16 h-12 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center">
-                                <span className="text-xl font-bold text-gray-900">
-                                  {item.quantity}
-                                </span>
+                              <div className="w-12 h-9 sm:w-16 sm:h-12 bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center">
+                                <span className="text-base sm:text-xl font-bold text-gray-900">{item.quantity}</span>
                               </div>
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                className="w-12 h-12 bg-[#368899] hover:bg-[#2d7a8a] text-white rounded-xl flex items-center justify-center transition-colors shadow-lg"
+                                className="w-9 h-9 sm:w-12 sm:h-12 bg-[#368899] hover:bg-[#2d7a8a] text-white rounded-lg sm:rounded-xl flex items-center justify-center transition-colors shadow-lg"
                               >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                               </button>
                             </div>
                           </div>
                         </div>
-                        
                         {/* Subtotal and Actions */}
-                        <div className="flex flex-col items-end gap-3">
+                        <div className="flex flex-col items-end gap-2 sm:gap-3">
                           <div className="text-right">
-                            <div className="text-lg font-semibold text-gray-900">
-                              £{(getItemPrice(item) * item.quantity).toFixed(2)}
-                            </div>
-                            <div className="text-sm text-gray-500">Subtotal</div>
+                            <div className="text-base sm:text-lg font-semibold text-gray-900">£{(getItemPrice(item) * item.quantity).toFixed(2)}</div>
+                            <div className="text-xs sm:text-sm text-gray-500">Subtotal</div>
                           </div>
                           <button
                             onClick={() => removeFromCart(item.id)}
-                            className="text-sm text-red-600 hover:text-red-800 underline transition-colors"
+                            className="text-xs sm:text-sm text-red-600 hover:text-red-800 underline transition-colors"
                           >
                             Remove
                           </button>
@@ -229,95 +213,86 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 sticky top-4">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h3>
-                
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8 sticky top-4">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Order Summary</h3>
                 {/* Promo Code */}
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Promo Code</label>
-                  <div className="flex gap-3">
+                <div className="mb-5 sm:mb-6">
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Promo Code</label>
+                  <div className="flex gap-2 sm:gap-3">
                     <input
                       type="text"
                       placeholder="Enter promo code"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
-                      className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
+                      className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#368899] focus:border-[#368899] transition-colors"
                     />
                     <button
                       onClick={handlePromoCode}
-                      className="px-6 py-3 bg-[#368899] text-white rounded-xl hover:bg-[#2d7a8a] transition-colors font-semibold shadow-lg"
+                      className="px-4 sm:px-6 py-2.5 sm:py-3 bg-[#368899] text-white rounded-xl hover:bg-[#2d7a8a] transition-colors font-semibold shadow-lg"
                     >
                       Apply
                     </button>
                   </div>
                 </div>
-
                 {/* Summary Details */}
-                <div className="space-y-4 mb-8">
-                  <div className="flex justify-between text-gray-700 py-2">
-                    <span className="text-lg">Subtotal ({totals.itemCount} items)</span>
-                    <span className="font-bold text-lg">£{totals.subtotal.toFixed(2)}</span>
+                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                  <div className="flex justify-between text-gray-700 py-1.5 sm:py-2">
+                    <span className="text-sm sm:text-lg">Subtotal ({totals.itemCount} items)</span>
+                    <span className="font-bold text-sm sm:text-lg">£{totals.subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-700 py-2">
-                    <span className="text-lg">VAT (20%)</span>
-                    <span className="font-bold text-lg">£{totals.vat.toFixed(2)}</span>
+                  <div className="flex justify-between text-gray-700 py-1.5 sm:py-2">
+                    <span className="text-sm sm:text-lg">VAT (20%)</span>
+                    <span className="font-bold text-sm sm:text-lg">£{totals.vat.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-700 py-2">
-                    <span className="text-lg">Shipping</span>
-                    <span className="font-bold text-lg text-green-600">
-                      {totals.shipping === 0 ? 'FREE' : `£${totals.shipping.toFixed(2)}`}
-                    </span>
+                  <div className="flex justify-between text-gray-700 py-1.5 sm:py-2">
+                    <span className="text-sm sm:text-lg">Shipping</span>
+                    <span className="font-bold text-sm sm:text-lg text-green-600">{totals.shipping === 0 ? 'FREE' : `£${totals.shipping.toFixed(2)}`}</span>
                   </div>
-                  <div className="border-t-2 border-gray-300 pt-4">
-                    <div className="flex justify-between text-2xl font-bold text-gray-900">
+                  <div className="border-t-2 border-gray-300 pt-3 sm:pt-4">
+                    <div className="flex justify-between text-xl sm:text-2xl font-bold text-gray-900">
                       <span>Total</span>
                       <span>£{totals.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
-
                 {/* Minimum Order Notice */}
                 {totals.subtotal < 40 && (
-                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-3 sm:p-4 mb-5 sm:mb-6">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                       </div>
-                      <p className="text-base font-semibold text-yellow-800">
-                        Add £{(40 - totals.subtotal).toFixed(2)} more for free shipping
-                      </p>
+                      <p className="text-sm sm:text-base font-semibold text-yellow-800">Add £{(40 - totals.subtotal).toFixed(2)} more for free shipping</p>
                     </div>
                   </div>
                 )}
-
                 {/* Action Buttons */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <Link 
                     href="/checkout"
-                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white py-4 rounded-xl hover:from-[#2d7a8a] hover:to-[#1e5b67] transition-all duration-300 font-bold text-lg shadow-xl transform hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-[#368899] to-[#2d7a8a] text-white py-3 sm:py-4 rounded-xl hover:from-[#2d7a8a] hover:to-[#1e5b67] transition-all duration-300 font-bold text-base sm:text-lg shadow-xl transform hover:scale-105"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     Proceed to Checkout
                   </Link>
                   <Link 
                     href="/"
-                    className="w-full flex items-center justify-center gap-3 border-2 border-[#368899] text-[#368899] py-3 rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-300 font-semibold"
+                    className="w-full flex items-center justify-center gap-2 sm:gap-3 border-2 border-[#368899] text-[#368899] py-2.5 sm:py-3 rounded-xl hover:bg-[#368899] hover:text-white transition-all duration-300 font-semibold text-sm sm:text-base"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     Continue Shopping
                   </Link>
                 </div>
-
                 {/* Delivery Information */}
-                <div className="mt-8 pt-6 border-t-2 border-gray-300">
-                  <h4 className="font-bold text-gray-900 mb-4 text-lg">Delivery Information</h4>
-                  <div className="text-base text-gray-600 space-y-2">
+                <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t-2 border-gray-300">
+                  <h4 className="font-bold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">Delivery Information</h4>
+                  <div className="text-sm sm:text-base text-gray-600 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-[#368899] rounded-full"></div>
                       <p>Free delivery on orders over £40</p>

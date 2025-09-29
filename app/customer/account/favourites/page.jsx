@@ -3,6 +3,7 @@ import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
 import ProductCard from "@/components/common/ProductCard";
 import { useWishlist } from "@/contexts/WishlistContext";
+import AuthGuard from '@/components/common/AuthGuard';
 
 export default function FavouritesPage() {
   const { wishlist, clearWishlist, getWishlistCount } = useWishlist();
@@ -30,6 +31,7 @@ export default function FavouritesPage() {
   };
 
   return (
+    <AuthGuard>
     <main className="w-full bg-gray-50 min-h-screen overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
@@ -157,5 +159,6 @@ export default function FavouritesPage() {
         </div>
       </div>
     </main>
+    </AuthGuard>
   );
 }

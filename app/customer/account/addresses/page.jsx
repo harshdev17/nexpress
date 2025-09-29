@@ -2,6 +2,7 @@
 import Link from "next/link";
 import AccountTabs from "@/components/common/AccountTabs";
 import { useState, useEffect } from "react";
+import AuthGuard from '@/components/common/AuthGuard';
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState([]);
@@ -217,6 +218,7 @@ export default function AddressesPage() {
   };
 
   return (
+    <AuthGuard>
     <main className="w-full bg-gray-50 min-h-screen overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
@@ -653,5 +655,6 @@ export default function AddressesPage() {
         )}
       </div>
     </main>
+    </AuthGuard>
   );
 }

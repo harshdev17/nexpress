@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState } from 'react';
 
 const WishlistContext = createContext();
 
@@ -35,6 +35,7 @@ const wishlistReducer = (state, action) => {
 
 export function WishlistProvider({ children }) {
   const [wishlist, dispatch] = useReducer(wishlistReducer, []);
+  const [loadedFromServer, setLoadedFromServer] = useState(false);
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
@@ -49,10 +50,40 @@ export function WishlistProvider({ children }) {
     }
   }, []);
 
-  // Save wishlist to localStorage whenever it changes
+  // Save to localStorage and sync to server if logged-in
   useEffect(() => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token) {
+      fetch('/api/wishlist', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        body: JSON.stringify({ items: wishlist })
+      }).catch(() => {});
+    }
   }, [wishlist]);
+
+  // On login load server wishlist and merge with local
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) return;
+    if (loadedFromServer) return;
+    (async () => {
+      try {
+        const res = await fetch('/api/wishlist', { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const server = Array.isArray(data.items) ? data.items : [];
+        const local = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        const byId = new Map();
+        [...server, ...local].forEach(p => { byId.set(p.id, p); });
+        const merged = Array.from(byId.values());
+        dispatch({ type: WISHLIST_ACTIONS.LOAD_WISHLIST, payload: merged });
+        setLoadedFromServer(true);
+      } catch {}
+    })();
+  }, [loadedFromServer]);
 
   const addToWishlist = (product) => {
     dispatch({ type: WISHLIST_ACTIONS.ADD_TO_WISHLIST, payload: product });

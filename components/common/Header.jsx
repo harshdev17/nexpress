@@ -106,13 +106,18 @@ export default function Header() {
 
   const selectSuggestion = (product, isMobile = false) => {
     const query = product.ItemName || product.Brand || product.Category;
+    if (!query) return;
     if (isMobile) {
-      setMobileSearchQuery(query);
       setShowMobileSuggestions(false);
+      setSelectedMobileSuggestionIndex(-1);
+      setIsMobileMenuOpen(false);
+      setMobileSearchQuery('');
     } else {
-      setSearchQuery(query);
       setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+      setSearchQuery('');
     }
+    router.push(`/products?search=${encodeURIComponent(query.trim())}`);
   };
 
   const clearSuggestions = (isMobile = false) => {
@@ -194,7 +199,7 @@ export default function Header() {
   }, []);
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-const [showMobileDropdown, setShowMobileDropdown] = useState(false);
+  const [showMobileDropdown, setShowMobileDropdown] = useState(false);
 
   useEffect(() => {
     try {
@@ -251,6 +256,12 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
       setCurrentUser(null);
       router.replace('/customer/login');
     }
+  };
+
+  // Helper to close mobile menu when clicking any link
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    setIsCategoryDropdownOpen(false);
   };
 
   return (
@@ -329,7 +340,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               </Link>
               
               {/* Cart Icon */}
-              <Link href="/cart" className="group cursor-pointer">
+              <Link href="/cart" className="group cursor-pointer" onClick={closeMobileMenu}>
                 <div className="relative">
                   <ShoppingCartIcon className="w-6 h-6 text-white transition-colors duration-300 group-hover:text-gray-200" />
                   {cartTotals.itemCount > 0 && (
@@ -341,10 +352,10 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               </Link>
 
               {/* Wishlist Icon */}
-              <Link href="/customer/account/favourites" className="group cursor-pointer ml-4">
+              <Link href="/customer/account/favourites" className="group cursor-pointer ml-4" onClick={closeMobileMenu}>
                 <div className="relative">
                   <svg className="w-6 h-6 text-white transition-colors duration-300 group-hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a2 2 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                   {getWishlistCount() > 0 && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
@@ -364,7 +375,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
             {/* Logo */}
             <div className="flex justify-center lg:justify-start">
-              <Link href="/" className="group">
+              <Link href="/" className="group" onClick={closeMobileMenu}>
                 <div className="flex items-center space-x-3 p-2 rounded-lg transition-all duration-300 hover:bg-gray-50">
                   <Image 
                     src="/logo.png" 
@@ -456,9 +467,6 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
         href={category.url}
         className="flex items-center space-x-2 px-3 py-2 hover:bg-[#368899]/5 rounded-md transition-colors duration-200"
       >
-        {/* <svg className="w-4 h-4 text-[#368899] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 2h8a1 1 0 011 1v6a1 1 0 01-1 1H6a1 1 0 01-1-1V7a1 1 0 011-1z" clipRule="evenodd" />
-        </svg> */}
         <span className="text-sm font-medium text-gray-800 hover:text-[#368899] transition-colors duration-200">
           {category.name}
         </span>
@@ -469,9 +477,6 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
 )}
               </div>
 
-
-              
-              
               <Link href="/delivery-areas" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Delivery Areas</Link>
               <Link href="/events" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">Corporate/Events</Link>
               <Link href="/about-us" className="text-gray-700 text-sm font-semibold transition-all duration-300 hover:text-[#368899] hover:scale-105">About Us</Link>
@@ -532,7 +537,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                               />
                             ) : (
                               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                               </svg>
                             )}
                           </div>
@@ -640,7 +645,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                                 />
                               ) : (
                                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                               )}
                             </div>
@@ -679,6 +684,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                       <div key={index} className="mb-3">
                         <Link 
                           href={category.url}
+                          onClick={closeMobileMenu}
                           className="block text-sm font-medium text-gray-800 hover:text-[#368899] transition-colors duration-300 mb-2"
                         >
                           {category.name}
@@ -689,6 +695,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                               <Link 
                                 key={subIndex}
                                 href={sub.url}
+                                onClick={closeMobileMenu}
                                 className="block text-xs text-gray-600 hover:text-[#368899] transition-colors duration-300 py-1"
                               >
                                 {sub.name}
@@ -706,19 +713,19 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
               <nav className="flex-1 overflow-y-auto p-4">
                 <ul className="space-y-2">
                   <li>
-                    <Link href="/" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <HomeIcon className="w-5 h-5" />
                       <span className="font-medium">Home</span>
                     </Link>
                   </li>
                   <li>
-                    <Link href="/products" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/products" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <ShoppingCartIcon className="w-5 h-5" />
                       <span className="font-medium">Shop</span>
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about-us" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/about-us" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
@@ -726,13 +733,13 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/delivery-areas" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/delivery-areas" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <DeliveryVanIcon className="w-5 h-5" />
                       <span className="font-medium">Delivery Areas</span>
                     </Link>
                   </li>
                   <li>
-                    <Link href="/events" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/events" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -740,7 +747,7 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="/faq" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="/faq" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <FAQIcon className="w-5 h-5" />
                       <span className="font-medium">FAQ's</span>
                     </Link>
@@ -751,19 +758,19 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">Social Media</span>
                   </li>
                   <li>
-                    <Link href="https://www.facebook.com/NexpressDeliveryUK/" target="_blank" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="https://www.facebook.com/NexpressDeliveryUK/" target="_blank" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <FacebookIcon className="w-5 h-5" />
                       <span className="font-medium">Facebook</span>
                     </Link>
                   </li>
                   <li>
-                    <Link href="https://twitter.com/nexpressuk" target="_blank" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="https://twitter.com/nexpressuk" target="_blank" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <TwitterIcon className="w-5 h-5" />
                       <span className="font-medium">Twitter</span>
                     </Link>
                   </li>
                   <li>
-                    <Link href="https://www.linkedin.com/in/angela-hart-11937223" target="_blank" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="https://www.linkedin.com/in/angela-hart-11937223" target="_blank" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                       </svg>
@@ -771,21 +778,21 @@ const [showMobileDropdown, setShowMobileDropdown] = useState(false);
                     </Link>
                   </li>
                   <li>
-                    <Link href="mailto:info@nexpressdelivery.co.uk" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                    <Link href="mailto:info@nexpressdelivery.co.uk" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                       <PhoneIcon className="w-5 h-5" />
                       <span className="font-medium">Contact Us</span>
                     </Link>
                   </li>
                   <li>
                     {currentUser ? (
-                      <button onClick={handleLogout} className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899] text-left">
+                      <button onClick={() => { closeMobileMenu(); handleLogout(); }} className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899] text-left">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                         <span className="font-medium">Logout</span>
                       </button>
                     ) : (
-                      <Link href="/customer/login" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
+                      <Link href="/customer/login" onClick={closeMobileMenu} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-300 text-gray-700 hover:text-[#368899]">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>

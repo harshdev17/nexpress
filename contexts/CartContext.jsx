@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState } from 'react';
 
 // Cart Context
 const CartContext = createContext();
@@ -72,6 +72,7 @@ export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, {
     items: []
   });
+  const [loadedFromServer, setLoadedFromServer] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -86,10 +87,45 @@ export function CartProvider({ children }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage and sync to server when logged-in
   useEffect(() => {
     localStorage.setItem('nexpress-cart', JSON.stringify(state.items));
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token) {
+      fetch('/api/cart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        body: JSON.stringify({ items: state.items })
+      }).catch(() => {});
+    }
   }, [state.items]);
+
+  // On login: fetch server cart and prompt merge if local has items
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) return;
+    if (loadedFromServer) return;
+    (async () => {
+      try {
+        const res = await fetch('/api/cart', { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const serverItems = Array.isArray(data.items) ? data.items : [];
+        const localItems = JSON.parse(localStorage.getItem('nexpress-cart') || '[]');
+        // Simple merge: combine and sum quantities by id
+        const map = new Map();
+        [...serverItems, ...localItems].forEach(it => {
+          const prev = map.get(it.id);
+          if (prev) map.set(it.id, { ...prev, quantity: prev.quantity + (it.quantity || 1) });
+          else map.set(it.id, { ...it, quantity: it.quantity || 1 });
+        });
+        const merged = Array.from(map.values());
+        dispatch({ type: CART_ACTIONS.LOAD_CART, payload: merged });
+        setLoadedFromServer(true);
+      } catch {}
+    })();
+  }, [loadedFromServer]);
 
   // Cart actions
   const addToCart = (product, quantity = 1) => {
